@@ -1,5 +1,7 @@
+# motion_box
+Motion Box with timelapse, slow motion vs.
 
-How to run to RFCOMM Bluetooth without being root?  
+## How to run to RFCOMM Bluetooth without being root?  
 https://stackoverflow.com/questions/34599703/rfcomm-bluetooth-permission-denied-error-raspberry-pi
 1. Add --compat option to bluetoothd in bluetooth.service
     ```
@@ -26,3 +28,4 @@ https://stackoverflow.com/questions/34599703/rfcomm-bluetooth-permission-denied-
     ```
     $ sudo chgrp bluetooth /var/run/sdp
     ```
+
