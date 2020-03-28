@@ -1,51 +1,95 @@
-import RPi.GPIO as GPIO
+#!/usr/bin/python3
+
+"""
+Gear reduction  1/64
+Step angle  
+    Half step mode (recommended): 0.0879°
+    Full step mode: 0.176°
+Steps per revolution    
+    Half step mode: 4096
+    Full step mode: 2048
+"""
+
+import sys
 import time
+import random
+import RPi.GPIO as GPIO
+GPIO.cleanup()
 
 GPIO.setmode(GPIO.BOARD)
 
-control_pins = [7, 11, 13, 15]
+class StepperMotor:
 
-def clearPins():
-	for pin in control_pins:
-	    GPIO.setup(pin, GPIO.OUT)
-	    GPIO.output(pin, 0)
+    Seq = [[1,0,0,1],
+           [1,0,0,0],
+           [1,1,0,0],
+           [0,1,0,0],
+           [0,1,1,0],
+           [0,0,1,0],
+           [0,0,1,1],
+           [0,0,0,1]]
 
-clearPins()
+    def __init__(self, pins):
+        assert len(pins) == 4, "4 pins must be specified"
+        self.pins = pins
+        self.direction = True   # ccw: false, cw: true
+        self.stepCount = 0
+        self.delay = 0.005
 
-def setStep(seq):
-	for i in range(4):
-		GPIO.output(control_pins[i], seq[i])
+    def setup(self):
+        for idx, pin in enumerate(self.pins):
+            GPIO.setup(pin, GPIO.OUT)
+            GPIO.output(pin, False)
 
-half_step_seq = [
-    [1,0,0,0],
-    [1,1,0,0],
-    [0,1,0,0],
-    [0,1,1,0],
-    [0,0,1,0],
-    [0,0,1,1],
-    [0,0,0,1],
-    [1,0,0,1]
-]
+    def step(self):
+        """Take a step in current direction"""
+        print('{} {}'.format(self.stepCount, self.direction))
+        if self.direction:
+            for i in range(len(self.Seq)):
+                self.setPins(self.Seq[i])
+                time.sleep(self.delay)
+        else:
+            for i in reversed(range(len(self.Seq))):
+                self.setPins(self.Seq[i])
+                time.sleep(self.delay)
 
-single_step_seq = [
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,0,1,0],
-    [0,0,0,1]
-]
+        self.stepCount += 1
 
-full_step_seq = [
-    [1,1,0,0],
-    [0,1,1,0],
-    [0,0,1,1],
-    [1,0,0,1]
-]
+    def setPins(self, seq):
+        """Set the pins with given sequence"""
+        assert len(seq) == len(self.pins), "length of sequence must be same with number of pins"
+        for idx, pin in enumerate(self.pins):
+            GPIO.output(pin, seq[idx])
 
-seq = full_step_seq
+    def turnToAngle(self, angle):
 
-for i in range(32*16):
-	for j in range(len(seq)):
-	    setStep(seq[j])
-	    time.sleep(0.01)
+        def degree2Step(degree):
+            return (int)(degree / 360 * (4096/8))
+
+        for i in range(0, degree2Step(angle)):
+            self.step()
+
+
+
+#Initialise the motor, specify the GPIO pins as a list
+motor = StepperMotor([7,11,13,15])
+motor.setup()
+
+if len(sys.argv) >= 3:
+    angleToGo = float(sys.argv[1])
+    waitTime = int(sys.argv[2])/float(1000)
+    direction = bool(sys.argv[3])
+
+    motor.delay = waitTime
+    motor.direction = direction
+    motor.turnToAngle(angleToGo)
+else:
+    """Decision-Maker game"""
+    direction = bool(random.randint(0, 2))
+    steps = random.randint(100, 512)
+    print("# of steps will be taken: {} in {} direction".format(steps, "CW" if direction else "CCW"))
+    motor.direction = direction
+    for i in range(0, steps):
+        motor.step()
 
 GPIO.cleanup()
