@@ -14,8 +14,8 @@ import sys
 import time
 import random
 import RPi.GPIO as GPIO
-GPIO.cleanup()
 
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
 class StepperMotor:
@@ -37,9 +37,8 @@ class StepperMotor:
         self.delay = 0.005
 
     def setup(self):
-        for idx, pin in enumerate(self.pins):
-            GPIO.setup(pin, GPIO.OUT)
-            GPIO.output(pin, False)
+        GPIO.setup(self.pins, GPIO.OUT)
+        GPIO.output(self.pins, (False, )*len(self.pins))
 
     def step(self):
         """Take a step in current direction"""
@@ -70,26 +69,26 @@ class StepperMotor:
             self.step()
 
 
+if __name__ == "__main__":
+    #Initialise the motor, specify the GPIO pins as a list
+    motor = StepperMotor((7,11,13,15))
+    motor.setup()
 
-#Initialise the motor, specify the GPIO pins as a list
-motor = StepperMotor([7,11,13,15])
-motor.setup()
+    if len(sys.argv) >= 3:
+        angleToGo = float(sys.argv[1])
+        waitTime = float(sys.argv[2])/float(1000)
+        direction = str(sys.argv[3]) in ['true', '1', 'yes', 'True']
 
-if len(sys.argv) >= 3:
-    angleToGo = float(sys.argv[1])
-    waitTime = int(sys.argv[2])/float(1000)
-    direction = bool(sys.argv[3])
+        motor.delay = waitTime
+        motor.direction = direction
+        motor.turnToAngle(angleToGo)
+    else:
+        """Decision-Maker game"""
+        direction = bool(random.randint(0, 2))
+        steps = random.randint(100, 512)
+        print("# of steps will be taken: {} in {} direction".format(steps, "CW" if direction else "CCW"))
+        motor.direction = direction
+        for i in range(0, steps):
+            motor.step()
 
-    motor.delay = waitTime
-    motor.direction = direction
-    motor.turnToAngle(angleToGo)
-else:
-    """Decision-Maker game"""
-    direction = bool(random.randint(0, 2))
-    steps = random.randint(100, 512)
-    print("# of steps will be taken: {} in {} direction".format(steps, "CW" if direction else "CCW"))
-    motor.direction = direction
-    for i in range(0, steps):
-        motor.step()
-
-GPIO.cleanup()
+    GPIO.cleanup()
