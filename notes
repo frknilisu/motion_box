@@ -1,0 +1,6 @@
+# Outputs a table with the current status values of the PINs.
+git clone git://git.drogon.net/
+cd ~/wiringPi
+./build
+gpio -v
+gpio readall
