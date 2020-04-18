@@ -1,33 +1,33 @@
-from flask import Flask, render_template, render_template_string, request
-from stepper import StepperMotor
+import sys
+print(sys.version)
+import time
+
+import timelapse
+
+from flask import Flask, render_template, render_template_string, request, redirect
 app = Flask(__name__)
 
-motor = StepperMotor((7,11,13,15))
-motor.setup()
+
+
 
 
 @app.route("/")
 def index():
-    return render_template("test_slider.html")
+    return render_template("timelapse.html")
 
-@app.route("/test", methods=["POST"])
-def test():
-    # Get slider Values
-    slider = int(request.form["slider"])
-    print(slider)
-  
-    if (slider>0):
-        print("Rotating Clockwise")
-        motor.direction = True
-        motor.turnToAngle(slider)
+@app.route("/timelapse", methods=["POST"])
+def f():
+    d = request.form.to_dict()
+    angle = int(d["angle"])
+    fps = int(d["fps"])
+    record_time = int(d["record_time"])
+    play_time = int(d["play_time"])
+    direction = bool(d["direction"])
+    timelapse.start(record_time, play_time, fps, angle, direction)
 
-    elif (slider<0):
-        print("Rotating Anti-Clockwise")
-        motor.direction = False
-        motor.turnToAngle(-slider)
+    return redirect('/')
 
-    return render_template("test_slider.html")
- 
+
 # Run the app on the local development server
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
