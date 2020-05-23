@@ -15,12 +15,13 @@ import time
 import random
 import struct
 import RPi.GPIO as GPIO
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
 
-class StepperMotor:
+class StepperMotor(QObject):
 
     Seq = [[1, 0, 0, 1],
            [1, 0, 0, 0],
@@ -33,7 +34,10 @@ class StepperMotor:
 
     stepSize = 360 / (4096/len(Seq))  # degree per step
 
+    cb_signal = pyqtSignal(dict)
+
     def __init__(self, pins, cb):
+        super().__init__()
         assert len(pins) == 4, "4 pins must be specified"
         self.pins = pins
         self.direction = True   # ccw: false, cw: true
@@ -74,7 +78,7 @@ class StepperMotor:
         for i in range(0, degree2Step(angle)):
             self.step()
             #data = bytearray(struct.pack("f", motor.stepCount * motor.stepSize))
-            self.cb(data={
+            self.cb_signal.emit({
                 'stepCount': self.stepCount,
                 'angle': self.stepCount * self.stepSize,
                 'percentage': (self.stepCount * self.stepSize)/angle*100

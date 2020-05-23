@@ -1,6 +1,8 @@
+import sys
+import time
 from networks import Server, Client
 from stepper import StepperMotor
-import time
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 
 def callback(data):
@@ -8,10 +10,18 @@ def callback(data):
     server.send(data)
 
 
+@pyqtSlot(dict)
+def cb_slot(data):
+    print("data: %{:.2f}".format(data['percentage']))
+    server.send(data)
+
+
 if __name__ == "__main__":
+
     server = Server(host='0.0.0.0', port=65432)
 
     motor = StepperMotor((7, 11, 13, 15), callback)
+    motor.cb_signal.connect(cb_slot)
     motor.setup()
 
     server.accept()
