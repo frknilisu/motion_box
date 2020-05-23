@@ -13,28 +13,33 @@ Steps per revolution
 import sys
 import time
 import random
+import struct
 import RPi.GPIO as GPIO
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
+
 class StepperMotor:
 
-    Seq = [[1,0,0,1],
-           [1,0,0,0],
-           [1,1,0,0],
-           [0,1,0,0],
-           [0,1,1,0],
-           [0,0,1,0],
-           [0,0,1,1],
-           [0,0,0,1]]
+    Seq = [[1, 0, 0, 1],
+           [1, 0, 0, 0],
+           [1, 1, 0, 0],
+           [0, 1, 0, 0],
+           [0, 1, 1, 0],
+           [0, 0, 1, 0],
+           [0, 0, 1, 1],
+           [0, 0, 0, 1]]
 
-    def __init__(self, pins):
+    stepSize = 360 / (4096/len(Seq))  # degree per step
+
+    def __init__(self, pins, cb):
         assert len(pins) == 4, "4 pins must be specified"
         self.pins = pins
         self.direction = True   # ccw: false, cw: true
         self.stepCount = 0
         self.delay = 0.005
+        self.cb = cb
 
     def setup(self):
         GPIO.setup(self.pins, GPIO.OUT)
@@ -42,7 +47,7 @@ class StepperMotor:
 
     def step(self):
         """Take a step in current direction"""
-        print('{} {}'.format(self.stepCount, self.direction))
+        #print('{} {}'.format(self.stepCount, self.direction))
         if self.direction:
             for i in range(len(self.Seq)):
                 self.setPins(self.Seq[i])
@@ -56,7 +61,8 @@ class StepperMotor:
 
     def setPins(self, seq):
         """Set the pins with given sequence"""
-        assert len(seq) == len(self.pins), "length of sequence must be same with number of pins"
+        assert len(seq) == len(
+            self.pins), "length of sequence must be same with number of pins"
         for idx, pin in enumerate(self.pins):
             GPIO.output(pin, seq[idx])
 
@@ -67,11 +73,17 @@ class StepperMotor:
 
         for i in range(0, degree2Step(angle)):
             self.step()
+            #data = bytearray(struct.pack("f", motor.stepCount * motor.stepSize))
+            self.cb(data={
+                'stepCount': self.stepCount,
+                'angle': self.stepCount * self.stepSize,
+                'percentage': (self.stepCount * self.stepSize)/angle*100
+            })
 
 
 if __name__ == "__main__":
-    #Initialise the motor, specify the GPIO pins as a list
-    motor = StepperMotor((7,11,13,15))
+    # Initialise the motor, specify the GPIO pins as a list
+    motor = StepperMotor(pins=(7, 11, 13, 15), cb=lambda x: print(x))
     motor.setup()
 
     if len(sys.argv) >= 3:
@@ -86,7 +98,8 @@ if __name__ == "__main__":
         """Decision-Maker game"""
         direction = bool(random.randint(0, 2))
         steps = random.randint(100, 512)
-        print("# of steps will be taken: {} in {} direction".format(steps, "CW" if direction else "CCW"))
+        print("# of steps will be taken: {} in {} direction".format(
+            steps, "CW" if direction else "CCW"))
         motor.direction = direction
         for i in range(0, steps):
             motor.step()
