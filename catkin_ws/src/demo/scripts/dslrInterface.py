@@ -1,0 +1,94 @@
+
+#!/usr/bin/python3
+
+from __future__ import print_function
+
+import logging
+import os
+import subprocess
+import sys
+import time
+import gphoto2 as gp
+
+
+def camera_info():
+    camera_list = list(gp.Camera.autodetect())
+    name, addr = camera_list[0]
+    camera = gp.Camera()
+    # search ports for camera port name
+    port_info_list = gp.PortInfoList()
+    port_info_list.load()
+    idx = port_info_list.lookup_path(addr)
+    camera.set_port_info(port_info_list[idx])
+    camera.init()
+    text = camera.get_summary()
+    print('Summary')
+    print('=======')
+    print(str(text))
+    try:
+        text = camera.get_manual()
+        print('Manual')
+        print('=======')
+        print(str(text))
+    except Exception as ex:
+        print(str(ex))
+    camera.exit()
+    return 0
+
+def capture1():
+    # time between captures
+    INTERVAL = 10.0
+    WORK_DIR = '/tmp/time_lapse'
+    OUT_FILE = 'timelapse.mp4'
+
+    if not os.path.exists(WORK_DIR):
+        os.makedirs(WORK_DIR)
+    template = os.path.join(WORK_DIR, 'frame%04d.jpg')
+    path = camera.capture(gp.GP_CAPTURE_IMAGE)
+    print('capture', path.folder + path.name)
+    camera_file = camera.file_get(path.folder, path.name, gp.GP_FILE_TYPE_NORMAL)
+    camera_file.save(template % count)
+    camera.file_delete(path.folder, path.name)
+    next_shot += INTERVAL
+    count += 1
+
+    subprocess.check_call(
+        ['ffmpeg', '-r', '25', '-i', template, '-c:v', 'h264', OUT_FILE])
+
+
+def capture2():
+    logging.basicConfig(
+        format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
+    callback_obj = gp.check_result(gp.use_python_logging())
+    camera = gp.Camera()
+    camera.init()
+    print('Capturing image')
+    file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+    print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+    target = os.path.join('/tmp', file_path.name)
+    print('Copying image to', target)
+    camera_file = camera.file_get(
+        file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+    camera_file.save(target)
+    subprocess.call(['xdg-open', target])
+    camera.exit()
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        rospy.init_node('dslrInterface', log_level=rospy.DEBUG)
+        # rate = rospy.Rate(​3)
+
+        # TODO: /take_shot
+        # TODO: /start_record
+        # TODO: /stop_record
+        while not​ rospy.is_shutdown():
+            rospy.logdebug(​"There is a missing droid")​
+            rate.sleep()
+
+            # rospy.spin()
+    except rospy.ROSInterruptException:
+        print("program interrupted before completion", file=sys.stderr)
+
+    sys.exit(main())
