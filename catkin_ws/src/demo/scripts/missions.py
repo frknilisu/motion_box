@@ -1,4 +1,6 @@
+import time
 from demo.msg import CmdStepMsg
+from geometry_msgs.msg import Twist
 
 
 class VideoTimelapse:
@@ -19,8 +21,8 @@ class VideoTimelapse:
 
 
 class PhotoTimelapse:
-    def __init__(self):
-        pass
+    def __init__(self, pub):
+        self.pub_cmd_step = pub
 
     def run(self, record_duration, video_length, fps, angle, direction):
         start_time = time.time()
@@ -28,12 +30,18 @@ class PhotoTimelapse:
         no_of_photo = fps * video_length
         interval_angle = angle / no_of_photo
         interval_delay = (record_duration / no_of_photo)/1000
-        # TODO: calculate speed
+        speed = 0.0  # TODO: calculate speed
 
         for i in range(no_of_photo):
             print('image{0:04d}.jpg'.format(i))
             # TODO: trigger dslr to capture photo via /take_shot
             # TODO: trigger motor step to turn until interval_angle via /cmd_step
+            new_msg = Twist()
+            new_msg.linear.x = speed
+            new_msg.angular.x = interval_angle
+            new_msg.angular.z = direction
+
+            self.pub_cmd_step.publish(new_msg)
             time.sleep(interval_delay)
 
         #system('convert -delay 10 -loop 0 image*.jpg animation.gif')
@@ -43,11 +51,12 @@ class PhotoTimelapse:
 
 
 class SimpleMove:
-    def __init__(self):
-        pass
+    def __init__(self, pub):
+        self.pub_cmd_step = pub
 
     def run(self, speed, angle, direction):
-        numberOfSteps = self.deg2Steps(angle)
-        for _ in range(0, numberOfSteps):
-            # TODO: publish cmd_step with speed and direction
-            pass
+        new_msg = Twist()
+        new_msg.linear.x = speed
+        new_msg.angular.x = angle
+        new_msg.angular.z = direction
+        self.pub_cmd_step.publish(new_msg)

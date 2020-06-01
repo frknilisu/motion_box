@@ -14,15 +14,16 @@ def callback_timelapse(msg):
     video_length = msg.video_length
     angle = msg.angle
     direction = msg.direction
-    PhotoTimelapse().run(record_duration, video_length, fps, angle, direction)
-    VideoTimelapse().run(video_length, angle, direction)
+    PhotoTimelapse(sub_timelapse).run(record_duration,
+                                      video_length, fps, angle, direction)
+    VideoTimelapse(sub_timelapse).run(video_length, angle, direction)
 
 
 def callback_simplemove(msg):
     speed = msg.speed
     angle = msg.angle
     direction = msg.direction
-    SimpleMove().run(speed, angle, direction)
+    SimpleMove(sub_simplemove).run(speed, angle, direction)
 
 
 """
@@ -75,8 +76,9 @@ if __name__ == "__main__":
         rospy.init_node('missionController', log_level=rospy.DEBUG)
         rate = rospy.Rate(​0.5​)
 
-        sub = rospy.Subscriber("/timelapse", TimelapseMsg, callback_timelapse)
-        sub = rospy.Subscriber(
+        sub_timelapse = rospy.Subscriber(
+            "/timelapse", TimelapseMsg, callback_timelapse)
+        sub_simplemove = rospy.Subscriber(
             "/simple_move", SimpleMoveMsg, callback_simplemove)
 
         while not​ rospy.is_shutdown():
