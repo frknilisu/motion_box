@@ -1,6 +1,5 @@
 import time
 from demo.msg import CmdStepMsg
-from geometry_msgs.msg import Twist
 
 
 class VideoTimelapse:
@@ -14,7 +13,7 @@ class VideoTimelapse:
         # degree to rev
         speed = (60.0 / video_length) * (degree / 360.0)
         # test conversion of video length and angle to rpm
-        assert(test(video_length=10, degree=360), 6)
+        #assert(test(video_length=10, degree=360), 6)
         # TODO: start video recording via /start_record (might be service|action)
         # TODO: trigger motor step to turn until interval_angle via /cmd_step possibly in loop (use speed and direction)
         # TODO: stop video recording via /stop_record (might be service|action)

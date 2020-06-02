@@ -46,7 +46,6 @@ class StepperMotor:
 
     # void stop()
     # void currentState(float * position)
-    # void run()
 
     def __init__(self, pins):
         assert len(pins) == 4, "4 pins must be specified"
@@ -109,7 +108,7 @@ class StepperMotor:
 
 
 if __name__ == "__main__":
-    rospy.init_node('motorController')
+    rospy.init_node('motorController', log_level=rospy.DEBUG)
     # Initialise the motor, specify the GPIO pins as a list
     motor = StepperMotor(pins=(7, 11, 13, 15))
     rospy.spin()

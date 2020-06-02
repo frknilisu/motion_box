@@ -8,7 +8,6 @@ project(demo)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   rospy
   std_msgs
   message_generation
@@ -71,7 +70,6 @@ add_message_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-#  geometry_msgs
   std_msgs
 )
 
@@ -107,7 +105,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES demo
-  CATKIN_DEPENDS geometry_msgs rospy std_msgs message_runtime
+  CATKIN_DEPENDS rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -162,7 +160,8 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/demo.py
+  scripts/motorController.py
+  scripts/missionController.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
