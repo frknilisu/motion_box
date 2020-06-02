@@ -4,26 +4,19 @@ import time
 import rospy
 from std_msgs.msg import Int64
 from std_srvs.srv import Empty, SetBool
-from demo.msg import TimelapseMsg, SimpleMoveMsg
-from missions import VideoTimelapse, PhotoTimelapse, SimpleMove
+from demo.msg import TimelapseMsg, CmdStepMsg
+from missions import VideoTimelapse, PhotoTimelapse
 
 
 def callback_timelapse(msg):
     fps = msg.fps
     record_duration = msg.record_duration
     video_length = msg.video_length
-    angle = msg.angle
+    degree = msg.degree
     direction = msg.direction
-    PhotoTimelapse(sub_timelapse).run(record_duration,
-                                      video_length, fps, angle, direction)
-    VideoTimelapse(sub_timelapse).run(video_length, angle, direction)
-
-
-def callback_simplemove(msg):
-    speed = msg.speed
-    angle = msg.angle
-    direction = msg.direction
-    SimpleMove(sub_simplemove).run(speed, angle, direction)
+    PhotoTimelapse(pub_cmd_step).run(record_duration,
+                                     video_length, fps, degree, direction)
+    VideoTimelapse(pub_cmd_step).run(video_length, degree, direction)
 
 
 """
@@ -76,10 +69,12 @@ if __name__ == "__main__":
         rospy.init_node('missionController', log_level=rospy.DEBUG)
         rate = rospy.Rate(​0.5​)
 
+        pub_cmd_step = rospy.Publish("/cmd_step", CmdStepMsg, queue_size=10)
+
         sub_timelapse = rospy.Subscriber(
             "/timelapse", TimelapseMsg, callback_timelapse)
         sub_simplemove = rospy.Subscriber(
-            "/simple_move", SimpleMoveMsg, callback_simplemove)
+            "/simple_move", CmdStepMsg, lambda msg: pub_cmd_step.publish(msg))
 
         while not​ rospy.is_shutdown():
             rospy.logdebug(​"rospy loop")​

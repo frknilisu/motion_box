@@ -52,7 +52,6 @@ add_message_files(
   FILES 
   CmdStepMsg.msg
   TimelapseMsg.msg
-  SimpleMoveMsg.msg
 )
 
 ## Generate services in the 'srv' folder

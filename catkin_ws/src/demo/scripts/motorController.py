@@ -18,7 +18,6 @@ import RPi.GPIO as GPIO
 
 import rospy
 from std_msgs.msg import Int64
-from geometry_msgs.msg import Twist
 from demo.msg import CmdStepMsg
 
 GPIO.setwarnings(False)
@@ -61,17 +60,16 @@ class StepperMotor:
         self.pub_pose = rospy.Publisher(
             "/current_position", Int64, queue_size=10)
         self.sub_cmd_step = rospy.Subscriber(
-            "/cmd_step", Twist, self.callback_cmd_step)
+            "/cmd_step", CmdStepMsg, self.callback_cmd_step)
 
     def callback_cmd_step(self, msg):
-        speed = msg.linear.x
-        degree = msg.angular.x
-        direction = bool(msg.angular.z)
-        #print("speed: {}, direction: {}".format(speed, direction))
-        motor.move(speed, degree, direction)
+        speed = msg.speed
+        degree = msg.degree
+        direction = msg.direction
+        self.move(speed, degree, direction)
 
         new_msg = Int64()
-        new_msg.data = motor.stepCount
+        new_msg.data = self.stepCount
         self.pub_pose.publish(new_msg)
 
     def setup(self):
