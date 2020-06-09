@@ -2,6 +2,10 @@ import time
 from demo.msg import CmdStepMsg
 
 
+import rospy
+from std_msgs.msg import Int64
+
+
 class VideoTimelapse:
 
     def __init__(self):
@@ -40,6 +44,9 @@ class PhotoTimelapse:
             new_msg.degree = interval_degree
             new_msg.direction = direction
             self.pub_cmd_step.publish(new_msg)
+
+            # TODO: wait until reach given degree
+            # self.wait_for_degree(degree)
 
             time.sleep(interval_delay)
 
