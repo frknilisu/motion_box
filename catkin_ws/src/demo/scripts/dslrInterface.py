@@ -10,6 +10,9 @@ import sys
 import time
 import gphoto2 as gp
 
+import rospy
+from std_msgs.msg import Empty
+
 
 def camera_info():
     camera_list = list(gp.Camera.autodetect())
@@ -35,6 +38,7 @@ def camera_info():
     camera.exit()
     return 0
 
+
 def capture1():
     # time between captures
     INTERVAL = 10.0
@@ -46,7 +50,8 @@ def capture1():
     template = os.path.join(WORK_DIR, 'frame%04d.jpg')
     path = camera.capture(gp.GP_CAPTURE_IMAGE)
     print('capture', path.folder + path.name)
-    camera_file = camera.file_get(path.folder, path.name, gp.GP_FILE_TYPE_NORMAL)
+    camera_file = camera.file_get(
+        path.folder, path.name, gp.GP_FILE_TYPE_NORMAL)
     camera_file.save(template % count)
     camera.file_delete(path.folder, path.name)
     next_shot += INTERVAL
@@ -75,13 +80,25 @@ def capture2():
     return 0
 
 
+def callback_take_shot(msg):
+    # TODO: call capture()
+    print("callback_take_shot")
+
+
+def callback_start_record(msg):
+    # TODO: call start_record()
+    print("callback_start_record")
+
+
 if __name__ == "__main__":
     try:
         rospy.init_node('dslrInterface', log_level=rospy.DEBUG)
-        # rate = rospy.Rate(​3)
+        rate = rospy.Rate(​10.0)
 
-        # TODO: /take_shot
-        # TODO: /start_record
+        sub_take_shot = rospy.Subscriber(
+            "/take_shot", Empty, callback_take_shot)
+        sub_take_shot = rospy.Subscriber(
+            "/start_record", Empty, callback_start_record)
         # TODO: /stop_record
         while not​ rospy.is_shutdown():
             rospy.logdebug(​"There is a missing droid")​
