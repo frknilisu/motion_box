@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>demo</name>
+  <name>motion_box</name>
   <version>0.0.0</version>
-  <description>The demo package</description>
+  <description>The motion_box package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

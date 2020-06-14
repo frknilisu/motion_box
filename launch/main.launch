@@ -1,0 +1,10 @@
+<launch>
+    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+        <remap from="cmd_vel" to="cmd_step" />
+        <param name="_speed" value="6.0" type="double" />
+        <param name="_turn" value="1.0" type="double" />
+    </node>
+
+    <node name="missionController" pkg="motion_box" type="missionController.py" output="screen" />
+    <node name="motorController" pkg="motion_box" type="motorController.py" output="screen" />
+</launch>

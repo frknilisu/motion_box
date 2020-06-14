@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 
 """
@@ -18,7 +19,7 @@ import RPi.GPIO as GPIO
 
 import rospy
 from std_msgs.msg import Int64
-from demo.msg import CmdStepMsg
+from motion_box.msg import CmdStepMsg
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)

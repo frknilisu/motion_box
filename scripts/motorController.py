@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 
 import sys
@@ -7,7 +8,7 @@ import struct
 
 import rospy
 from std_msgs.msg import Int64
-from demo.msg import CmdStepMsg
+from motion_box.msg import CmdStepMsg
 
 
 def cb_encoder_counter(self, msg):

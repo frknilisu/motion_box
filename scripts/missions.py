@@ -1,5 +1,5 @@
 import time
-from demo.msg import CmdStepMsg
+from motion_box.msg import CmdStepMsg
 
 
 import rospy
