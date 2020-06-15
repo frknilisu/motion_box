@@ -7,7 +7,7 @@ from motion_box.msg import TimelapseMsg, CmdStepMsg
 from missions import VideoTimelapse, PhotoTimelapse
 
 
-def callback_timelapse(msg):
+def timelapse_cb(msg):
     fps = msg.fps
     record_duration = msg.record_duration
     video_length = msg.video_length
@@ -17,18 +17,14 @@ def callback_timelapse(msg):
                                      video_length, fps, degree, direction)
     #VideoTimelapse(pub_cmd_step).run(video_length, degree, direction)
 
-
 if __name__ == "__main__":
     try:
         rospy.init_node('missionController', log_level=rospy.DEBUG)
         rate = rospy.Rate(​1.0)
 
-        pub_cmd_step = rospy.Publish("/cmd_step", CmdStepMsg, queue_size=10)
+        pub_cmd_step = rospy.Publish("/simple_move", CmdStepMsg, queue_size=10)
 
-        sub_timelapse = rospy.Subscriber(
-            "/timelapse", TimelapseMsg, callback_timelapse)
-        sub_simplemove = rospy.Subscriber(
-            "/simple_move", CmdStepMsg, lambda msg: pub_cmd_step.publish(msg))
+        rospy.Subscriber("/timelapse", TimelapseMsg, timelapse_cb)
 
         while not​ rospy.is_shutdown():
             rospy.logdebug(​"rospy loop")​

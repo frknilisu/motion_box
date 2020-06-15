@@ -6,6 +6,7 @@ import rospy
 from std_msgs.msg import Int64
 
 
+
 class VideoTimelapse:
 
     def __init__(self):
@@ -27,6 +28,12 @@ class PhotoTimelapse:
     def __init__(self, pub):
         self.pub_cmd_step = pub
 
+        self.move_done = False
+        rospy.Subscriber("/move_done", Bool, move_done_cb)
+
+    def move_done_cb(self, msg):
+        self.move_done = msg.data
+
     def run(self, record_duration, video_length, fps, degree, direction):
         start_time = time.time()
 
@@ -46,7 +53,8 @@ class PhotoTimelapse:
             self.pub_cmd_step.publish(new_msg)
 
             # TODO: wait until reach given degree
-            # self.wait_for_degree(degree)
+            while self.move_done:
+                rate.sleep()
 
             time.sleep(interval_delay)
 

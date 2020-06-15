@@ -7,11 +7,11 @@ import random
 import struct
 
 import rospy
-from std_msgs.msg import Int64
+from std_msgs.msg import Int64, Bool
 from motion_box.msg import CmdStepMsg
 
 
-def cb_encoder_counter(self, msg):
+def encoder_counter_cb(self, msg):
     self.last_encoder_counter = msg.data
 
 
@@ -33,8 +33,18 @@ def wait_for(self, condition, timeout=None, interval=0.1, errmsg=None):
 
 
 def wait_for_degree(self, degree, timeout=None):
-    self.wait_for(lambda: self.last_encoder_counter ==
-                  degree, timeout=timeout)
+    try:
+        self.wait_for(lambda: self.last_encoder_counter == degree, timeout=timeout)
+    except TimeoutError:
+        return False
+
+    return True
+
+
+def simplemove_cb(self, msg):
+    pub_cmd_step.publish(msg)
+    resp = wait_for_degree(msg.degree, timeout=(msg.degree / 6*msg.speed))
+    pub_move_feedback.publish(resp)
 
 
 if __name__ == "__main__":
@@ -43,15 +53,15 @@ if __name__ == "__main__":
         rate = rospy.Rate(​1.0)
 
         pub_cmd_step = rospy.Publish("/cmd_step", CmdStepMsg, queue_size=10)
+        pub_move_feedback = rospy.Publisher("/move_done", Bool, queue_size=10)
+
+        rospy.Subscriber("/simple_move", CmdStepMsg, simplemove_cb)
 
         self.last_encoder_counter = 0
-
-        self.sub_encoder_counter = rospy.Subscriber(
-            "/encoder_counter", Int64, self.cb_encoder_counter)
+        rospy.Subscriber("/encoder_counter", Int64, self.encoder_counter_cb)
 
         while not​ rospy.is_shutdown():
             rospy.logdebug(​"rospy loop")​
-
             rate.sleep()
             # rospy.spin()
     except rospy.ROSInterruptException:

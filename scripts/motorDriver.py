@@ -109,7 +109,7 @@ class StepperMotor:
 
 
 if __name__ == "__main__":
-    rospy.init_node('motorController', log_level=rospy.DEBUG)
+    rospy.init_node('motorDriver', log_level=rospy.DEBUG)
     # Initialise the motor, specify the GPIO pins as a list
     motor = StepperMotor(pins=(7, 11, 13, 15))
     rospy.spin()
