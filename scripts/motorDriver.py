@@ -57,20 +57,16 @@ class StepperMotor:
         self.seq_head = 0
         self.step_delay = 0.1
 
-        self.pub_pose = rospy.Publisher(
-            "/current_position", Int64, queue_size=10)
         self.sub_cmd_step = rospy.Subscriber(
             "/cmd_step", CmdStepMsg, self.callback_cmd_step)
+
+        self.pub_counter = rospy.Publisher("/encoder_counter", Int64, queue_size=10)
 
     def callback_cmd_step(self, msg):
         speed = msg.speed
         degree = msg.degree
         direction = msg.direction
         self.move(speed, degree, direction)
-
-        new_msg = Int64()
-        new_msg.data = self.stepCount
-        self.pub_pose.publish(new_msg)
 
     def setup(self):
         GPIO.setup(self.pins, GPIO.OUT)
@@ -106,6 +102,12 @@ class StepperMotor:
         numberOfSteps = self.deg2Steps(degree)
         for _ in range(0, numberOfSteps):
             self.step()
+            self.simulateEncoder()
+
+    def simulateEncoder(self):
+        new_msg = Int64()
+        new_msg.data = self.stepCount
+        self.pub_counter.publish(new_msg)
 
 
 if __name__ == "__main__":

@@ -52,9 +52,11 @@ class PhotoTimelapse:
             new_msg.direction = direction
             self.pub_cmd_step.publish(new_msg)
 
-            # TODO: wait until reach given degree
-            while self.move_done:
+            # wait until reach given degree
+            while not self.move_done:
                 rate.sleep()
+
+            self.move_done = False
 
             time.sleep(interval_delay)
 
