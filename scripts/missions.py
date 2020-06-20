@@ -1,9 +1,11 @@
+#!/usr/bin/python3
+
 import time
 from motion_box.msg import CmdStepMsg
 
 
 import rospy
-from std_msgs.msg import Int64
+from std_msgs.msg import Int64, Bool
 
 
 
@@ -29,7 +31,7 @@ class PhotoTimelapse:
         self.pub_cmd_step = pub
 
         self.move_done = False
-        rospy.Subscriber("/move_done", Bool, move_done_cb)
+        rospy.Subscriber("/move_done", Bool, self.move_done_cb)
 
     def move_done_cb(self, msg):
         self.move_done = msg.data
@@ -37,24 +39,27 @@ class PhotoTimelapse:
     def run(self, record_duration, video_length, fps, degree, direction):
         start_time = time.time()
 
-        no_of_photo = fps * video_length
+        no_of_photo = int(fps * video_length)
         interval_degree = degree / no_of_photo
         interval_delay = (record_duration / no_of_photo)/1000
-        speed = 0.0  # TODO: calculate speed
+        speed = 1.0  # TODO: calculate speed
+
+        print("# of photo: {}\ninterval_degree: {}\ninterval_delay: {}".format(no_of_photo, interval_degree, interval_delay))
 
         for i in range(no_of_photo):
             print('image{0:04d}.jpg'.format(i))
             # TODO: trigger dslr to capture photo via /take_shot
 
             new_msg = CmdStepMsg()
-            new_msg.speed = speed
-            new_msg.degree = interval_degree
+            new_msg.speed = int(speed)
+            new_msg.degree = int(interval_degree)
             new_msg.direction = direction
             self.pub_cmd_step.publish(new_msg)
 
             # wait until reach given degree
             while not self.move_done:
-                rate.sleep()
+                #print("wait to done")
+                time.sleep(1)
 
             self.move_done = False
 

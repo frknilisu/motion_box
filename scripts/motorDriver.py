@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 
 """
@@ -40,10 +39,10 @@ class StepperMotor:
     stepSize = 360 / revsteps      # degree per step
 
     def deg2Steps(self, deg):
-        return (int)(deg/self.stepSize)
+        return int(round(deg/self.stepSize))
 
     def steps2Deg(self, steps):
-        return (float)(steps * self.stepSize)
+        return float(steps * self.stepSize)
 
     # void stop()
     # void currentState(float * position)
@@ -66,6 +65,7 @@ class StepperMotor:
         speed = msg.speed
         degree = msg.degree
         direction = msg.direction
+        self.stepCount = 0
         self.move(speed, degree, direction)
 
     def setup(self):
@@ -100,6 +100,7 @@ class StepperMotor:
         self.direction = direction   # ccw: false, cw: true
         self.step_delay = 60.0 / (self.revsteps * speed)
         numberOfSteps = self.deg2Steps(degree)
+        print("step_delay: {}, # of steps: {}".format(self.step_delay, numberOfSteps))
         for _ in range(0, numberOfSteps):
             self.step()
             self.simulateEncoder()

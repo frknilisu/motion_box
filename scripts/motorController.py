@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 
 import sys
@@ -11,11 +10,12 @@ from std_msgs.msg import Int64, Bool
 from motion_box.msg import CmdStepMsg
 
 
-def encoder_counter_cb(self, msg):
-    self.last_encoder_counter = msg.data
+def encoder_counter_cb(msg):
+    global last_encoder_counter
+    last_encoder_counter = msg.data
 
 
-def wait_for(self, condition, timeout=None, interval=0.1, errmsg=None):
+def wait_for(condition, timeout=None, interval=0.1, errmsg=None):
     '''Wait for a condition to be True.
     Wait for condition, a callable, to return True.  If timeout is
     nonzero, raise a TimeoutError(errmsg) if the condition is not
@@ -32,37 +32,46 @@ def wait_for(self, condition, timeout=None, interval=0.1, errmsg=None):
         time.sleep(interval)
 
 
-def wait_for_degree(self, degree, timeout=None):
+def wait_for_degree(steps, timeout=None):
     try:
-        self.wait_for(lambda: self.last_encoder_counter == degree, timeout=timeout)
+        wait_for(lambda: last_encoder_counter == steps, timeout=timeout)
     except TimeoutError:
         return False
 
     return True
 
+def deg2Steps(deg):
+    return int(round(deg/(360/4096)))
 
-def simplemove_cb(self, msg):
+def simplemove_cb(msg):
+    global timerStart, lastMsg
+    timerStart = True
+    lastMsg = msg
     pub_cmd_step.publish(msg)
-    resp = wait_for_degree(msg.degree, timeout=(msg.degree / 6*msg.speed))
-    pub_move_feedback.publish(resp)
 
 
 if __name__ == "__main__":
     try:
         rospy.init_node('motorController', log_level=rospy.DEBUG)
-        rate = rospy.Rate(​1.0)
+        r = rospy.Rate(10) # 10Hz
+        timerStart = False
+        lastMsg = CmdStepMsg()
 
-        pub_cmd_step = rospy.Publish("/cmd_step", CmdStepMsg, queue_size=10)
+        pub_cmd_step = rospy.Publisher("/cmd_step", CmdStepMsg, queue_size=10)
         pub_move_feedback = rospy.Publisher("/move_done", Bool, queue_size=10)
 
         rospy.Subscriber("/simple_move", CmdStepMsg, simplemove_cb)
 
-        self.last_encoder_counter = 0
-        rospy.Subscriber("/encoder_counter", Int64, self.encoder_counter_cb)
+        last_encoder_counter = 0
+        rospy.Subscriber("/encoder_counter", Int64, encoder_counter_cb)
 
-        while not​ rospy.is_shutdown():
-            rospy.logdebug(​"rospy loop")​
-            rate.sleep()
-            # rospy.spin()
+        
+        while not rospy.is_shutdown():
+            #print("timerStart: {}, lastMsg: {}, encoder: {}".format(timerStart, deg2Steps(lastMsg.degree), last_encoder_counter))
+            if timerStart and deg2Steps(lastMsg.degree) == last_encoder_counter: #(msg.degree / 6*msg.speed))
+                pub_move_feedback.publish(True)
+                timerStart = False
+            # ... do some work ...
+            r.sleep()
     except rospy.ROSInterruptException:
         print("program interrupted before completion", file=sys.stderr)
