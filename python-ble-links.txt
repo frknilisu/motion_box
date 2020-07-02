@@ -1,0 +1,8 @@
+https://github.com/smulrine/pielliptical
+https://github.com/Alkhwarizm/simple-ble-server
+https://github.com/sharukhhasan/RaspberryPi-Bluetooth-Controller
+https://github.com/Samcandy/gatt-server
+https://github.com/Jumperr-labs/python-gatt-server
+https://github.com/dati91/gatt_server
+
+https://scribles.net/creating-ble-gatt-server-uart-service-on-raspberry-pi/
