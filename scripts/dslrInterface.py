@@ -79,6 +79,16 @@ def capture2():
     return 0
 
 
+shutterPin = 16
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(shutterPin, GPIO.OUT)
+def take_shot():
+    GPIO.output(shutterPin, GPIO.HIGH)
+    time.sleep(0.5)
+    GPIO.output(shutterPin, GPIO.LOW)
+    time.sleep(1)
+
+
 def callback_take_shot(msg):
     # TODO: call capture()
     print("callback_take_shot")
