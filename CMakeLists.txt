@@ -162,6 +162,7 @@ include_directories(
 install(PROGRAMS
   scripts/motorController.py
   scripts/missionController.py
+  scripts/remoteInterface.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

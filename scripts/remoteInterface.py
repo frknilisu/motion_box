@@ -7,8 +7,19 @@ from networks import Server, Client
 
 def parseData(data):
     rospy.logdebug(data)
-    #angle = data.get("angle", 180)
+
+    record_duration = int(data.get("record_duration", 10))
+    video_length = int(data.get("video_length", 10))
+    fps = int(data.get("fps", 25))
+    degree = int(data.get("degree", 180))
+    direction = bool(data.get("direction", True))
+    
     msg = TimelapseMsg()
+    msg.record_duration = rospy.Time(record_duration)
+    msg.video_length = rospy.Time(video_length)
+    msg.fps = fps
+    msg.degree = degree
+    msg.direction = direction
     return msg
 
 if __name__ == "__main__":
