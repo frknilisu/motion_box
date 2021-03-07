@@ -1,5 +1,5 @@
 time record_duration
 time video_length
-uint32 fps
-uint32 degree
+uint16 fps
+float32 degree
 bool direction
