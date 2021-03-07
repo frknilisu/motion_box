@@ -37,7 +37,7 @@ class PhotoTimelapse:
         interval_duration = record_duration / no_of_photo
         interval_degree = degree / no_of_photo
 
-        rospy.loginfo("# of photo: {}\ninterval_degree: {}".format(no_of_photo, interval_degree))
+        rospy.loginfo("{} photo will be taken at each {} degree by {} sec".format(no_of_photo, interval_degree, interval_duration))
 
         for i in range(no_of_photo):
             rospy.loginfo('image{0:04d}.jpg'.format(i))
@@ -45,7 +45,7 @@ class PhotoTimelapse:
             # TODO: trigger dslr to capture photo via /take_shot
 
             #if take_shot.isOK()
-            new_msg = CmdStepMsg()
+            new_msg = RotateMsg()
             new_msg.degree = interval_degree
             new_msg.direction = direction
             self.pub_rotate.publish(new_msg)
