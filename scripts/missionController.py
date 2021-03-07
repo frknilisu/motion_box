@@ -1,11 +1,8 @@
 #!/usr/bin/python3
 
-from os import system
-import time
-
 import rospy
-from std_msgs.msg import Int64
-from motion_box.msg import TimelapseMsg, CmdStepMsg
+
+from motion_box.msg import TimelapseMsg, RotateMsg
 from missions import VideoTimelapse, PhotoTimelapse
 
 
@@ -24,13 +21,9 @@ if __name__ == "__main__":
         rospy.init_node('missionController', log_level=rospy.DEBUG)
         r = rospy.Rate(10) # 10Hz
 
-        pub_cmd_step = rospy.Publisher("/simple_move", CmdStepMsg, queue_size=10)
-
-        rospy.Subscriber("/timelapse", TimelapseMsg, timelapse_cb)
+        pub_rotate = rospy.Publisher("/rotate", RotateMsg, queue_size=10)
 
         while not rospy.is_shutdown():
-            # ... do some work ...
             r.sleep()
-        #rospy.spin()
     except rospy.ROSInterruptException:
         print("program interrupted before completion", file=sys.stderr)
