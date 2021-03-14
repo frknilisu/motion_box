@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-import rospy
 import time
+import rospy
 
-from motion_box.msg import RotateMsg
-
+from motion_box.msg import TimelapseMsg, RotateMsg
 
 class VideoTimelapse:
 
@@ -15,7 +14,6 @@ class VideoTimelapse:
         rospy.loginfo("Recording started!..")
         # TODO: start video recording via /start_record (might be service|action)
 
-        # TODO: trigger motor step to turn until interval_angle via /cmd_step possibly in loop (use speed and direction)
         new_msg = RotateMsg()
         #new_msg.duration = video_length
         new_msg.degree = degree
@@ -23,10 +21,11 @@ class VideoTimelapse:
         self.pub_rotate.publish(new_msg)
         
         # TODO: stop video recording via /stop_record (might be service|action)
-        #rospy.loginfo("Recording stopped!..")
+        rospy.loginfo("Recording stopped!..")
 
 
 class PhotoTimelapse:
+    
     def __init__(self, pub):
         self.pub_rotate = pub
 
@@ -44,18 +43,12 @@ class PhotoTimelapse:
 
             # TODO: trigger dslr to capture photo via /take_shot
 
-            #if take_shot.isOK()
             new_msg = RotateMsg()
             new_msg.degree = interval_degree
             new_msg.direction = direction
             self.pub_rotate.publish(new_msg)
 
-            # TODO: wait until reach given degree
-            #while not self.move_done:
-            #    #print("wait to done")
-            #    time.sleep(1)
-
-            #self.move_done = False
+            # TODO: wait/check until reach given degree
 
             time.sleep(interval_duration)
 

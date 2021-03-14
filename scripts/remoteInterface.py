@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import rospy
-from std_msgs.msg import Int64
-from motion_box.msg import TimelapseMsg, CmdStepMsg
+
+from motion_box.msg import TimelapseMsg, RotateMsg
 from networks import Server, Client
 
 def parseData(data):
@@ -11,7 +11,7 @@ def parseData(data):
     record_duration = int(data.get("record_duration", 10))
     video_length = int(data.get("video_length", 10))
     fps = int(data.get("fps", 25))
-    degree = int(data.get("degree", 180))
+    degree = float(data.get("degree", 180.0))
     direction = bool(data.get("direction", True))
     
     msg = TimelapseMsg()
@@ -28,9 +28,9 @@ if __name__ == "__main__":
         r = rospy.Rate(10) # 10Hz
 
         pub_timelapse = rospy.Publisher(
-            "/cmd_timelapse", TimelapseMsg, queue_size=10)
-        pub_simplemove = rospy.Publisher(
-            "/cmd_simplemove", CmdStepMsg, queue_size=10)
+            "ri/cmd/timelapse", TimelapseMsg, queue_size=10)
+        pub_rotate = rospy.Publisher(
+            "ri/cmd/rotate", RotateMsg, queue_size=10)
 
         server = Server(host='0.0.0.0', port=65432)
 
@@ -40,8 +40,8 @@ if __name__ == "__main__":
             msg = parseData(json_data)
             if type(msg) == TimelapseMsg:
                 pub_timelapse.publish(msg)
-            elif type(msg) == CmdStepMsg:
-                pub_simplemove.publish(msg)
+            elif type(msg) == RotateMsg:
+                pub_rotate.publish(msg)
             r.sleep()
     except rospy.ROSInterruptException:
         print("program interrupted before completion", file=sys.stderr)

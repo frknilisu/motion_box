@@ -7,14 +7,13 @@ from missions import VideoTimelapse, PhotoTimelapse
 
 
 def timelapse_cb(msg):
-    rospy.loginfo("PhotoTimelapse starting!..")
+    rospy.loginfo("timelapse_cb()..")
     fps = msg.fps
     record_duration = msg.record_duration.to_sec()
     video_length = msg.video_length.to_sec()
     degree = msg.degree
     direction = msg.direction
-    PhotoTimelapse(pub_rotate).run(record_duration,
-                                     video_length, fps, degree, direction)
+    PhotoTimelapse(pub_rotate).run(record_duration, video_length, fps, degree, direction)
     #VideoTimelapse(pub_cmd_step).run(video_length, degree, direction)
 
 if __name__ == "__main__":
@@ -22,8 +21,8 @@ if __name__ == "__main__":
         rospy.init_node('missionController', log_level=rospy.DEBUG)
         r = rospy.Rate(10) # 10Hz
 
-        pub_rotate = rospy.Publisher("/rotate", RotateMsg, queue_size=10)
-        rospy.Subscriber("/timelapse", TimelapseMsg, timelapse_cb)
+        pub_rotate = rospy.Publisher("motor/cmd/rotate", RotateMsg, queue_size=10)
+        rospy.Subscriber("ri/cmd/timelapse", TimelapseMsg, timelapse_cb)
 
         while not rospy.is_shutdown():
             r.sleep()

@@ -2,6 +2,7 @@
 
 import rospy
 
+from RpiMotorLib import RpiMotorLib
 from motion_box.msg import RotateMsg
 
 def rotateMsg_cb(msg):
@@ -32,7 +33,7 @@ if __name__ == "__main__":
 
         motor = RpiMotorLib.A4988Nema(direction, step, GPIO_pins, "DRV8825")
 
-        rospy.Subscriber("/rotate", RotateMsg, rotateMsg_cb)
+        rospy.Subscriber("motor/cmd/rotate", RotateMsg, rotateMsg_cb)
 
         while not rospy.is_shutdown():
             r.sleep()
