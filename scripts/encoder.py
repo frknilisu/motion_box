@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
+import rospy
 import sys
 import time
 import random
 import struct
-import RPi.GPIO as GPIO
 
-import rospy
 from std_msgs.msg import Int64
+
+import RPi.GPIO as GPIO
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -49,6 +50,5 @@ class Encoder:
 
 if __name__ == "__main__":
     rospy.init_node('encoder', log_level=rospy.DEBUG)
-    # Initialise the motor, specify the GPIO pins as a list
     encoder = Encoder(pins=(17, 18))
     rospy.spin()

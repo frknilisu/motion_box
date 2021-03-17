@@ -1,24 +1,23 @@
 #!/usr/bin/python3
 
-import time
 import rospy
+import time
 
-from motion_box.msg import TimelapseMsg, RotateMsg
+from std_msgs.msg import String
 
 class VideoTimelapse:
 
     def __init__(self, pub):
-        self.pub_rotate = pub
+        self.pub_motor_cmd = pub
 
     def run(self, video_length, degree, direction):
         rospy.loginfo("Recording started!..")
         # TODO: start video recording via /start_record (might be service|action)
 
-        new_msg = RotateMsg()
         #new_msg.duration = video_length
         new_msg.degree = degree
         new_msg.direction = direction
-        self.pub_rotate.publish(new_msg)
+        self.pub_motor_cmd.publish(new_msg)
         
         # TODO: stop video recording via /stop_record (might be service|action)
         rospy.loginfo("Recording stopped!..")
@@ -27,7 +26,7 @@ class VideoTimelapse:
 class PhotoTimelapse:
     
     def __init__(self, pub):
-        self.pub_rotate = pub
+        self.pub_motor_cmd = pub
 
     def run(self, record_duration, video_length, fps, degree, direction):
         start_time = time.time()
@@ -46,7 +45,7 @@ class PhotoTimelapse:
             new_msg = RotateMsg()
             new_msg.degree = interval_degree
             new_msg.direction = direction
-            self.pub_rotate.publish(new_msg)
+            self.pub_motor_cmd.publish(new_msg)
 
             # TODO: wait/check until reach given degree
 
