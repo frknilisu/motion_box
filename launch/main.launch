@@ -1,8 +1,7 @@
 <launch>
-    <!-- <node name="motorDriver" pkg="motion_box" type="motorDriver.py" output="screen" />
-    <node name="encoder" pkg="motion_box" type="encoder.py" output="screen" /> -->
     <node name="motorController" pkg="motion_box" type="motorController.py" output="screen" />
+    <!-- <node name="encoder" pkg="motion_box" type="encoder.py" output="screen" /> -->
     <node name="missionController" pkg="motion_box" type="missionController.py" output="screen" />
-    <node name="remoteInterface" pkg="motion_box" type="remoteInterface.py" output="screen" />
     <!-- <node name="dslrInterface" pkg="motion_box" type="dslrInterface.py" output="screen" /> -->
+    <node name="remoteInterface" pkg="motion_box" type="remoteInterface.py" output="screen" />
 </launch>

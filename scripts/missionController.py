@@ -6,19 +6,29 @@ from std_msgs.msg import String
 
 from missions import VideoTimelapse, PhotoTimelapse
 
-def mission_cb(msg):
-    rospy.loginfo("mission_cb()..")
-    motor_cmd_msg = msg
-    #VideoTimelapse(pub_motor_cmd).run(msg)
+controller = None
+
+def mission_photo_timelapse_cb(msg):
+    rospy.loginfo("mission_photo_timelapse_cb()..")
+    if msg['command'] == "start":
+        if controller is None or not controller.is_running:
+            controller = PhotoTimelapse(msg)
+        else:
+            rospy.logwarn("Controller is running already")
+    elif msg['command'] == "stop":
+        if not controller is None and controller.is_running:
+            controller.stop()
+        else:
+            rospy.logwarn("Controller is not running")
 
 if __name__ == "__main__":
     rospy.init_node('missionController', log_level=rospy.DEBUG)
     r = rospy.Rate(10) # 10Hz
 
-    pub_motor_cmd = rospy.Publisher("motor/cmd", String, queue_size=10)
-    rospy.Subscriber("mission", String, mission_cb)
+    rospy.Subscriber("mission/photo_timelapse", String, mission_photo_timelapse_cb)
 
-    mission_controller = PhotoTimelapse(pub_motor_cmd)
-    mission_controller.run(motor_cmd_msg)
-
-    rospy.spin()
+    while not rospy.is_shutdown():
+        if controller.state == "ready":
+            controller.start()
+        
+        r.sleep()
