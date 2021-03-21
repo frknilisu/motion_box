@@ -79,16 +79,16 @@ class PhotoTimelapse:
         return self.state == "stopped" or self.state == "uninitalized"
 
     @property
-	def state(self):
-		return self._state
-	
-	@state.setter
-	def state(self, state):
+    def state(self):
+        return self._state
+    
+    @state.setter
+    def state(self, state):
         self._state = state
 
-	@state.deleter
-	def state(self):
-		del self._state
+    @state.deleter
+    def state(self):
+        del self._state
 
 """
 def convert():

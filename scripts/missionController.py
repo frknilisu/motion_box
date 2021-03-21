@@ -28,7 +28,7 @@ if __name__ == "__main__":
     rospy.Subscriber("mission/photo_timelapse", String, mission_photo_timelapse_cb)
 
     while not rospy.is_shutdown():
-        if controller.state == "ready":
+        if not controller is None and controller.state == "ready":
             controller.start()
         
         r.sleep()
