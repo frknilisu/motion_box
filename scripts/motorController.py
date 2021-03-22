@@ -4,7 +4,7 @@ import rospy
 import json
 
 from std_msgs.msg import String
-from std_srvs.srv import Empty, EmptyResponse
+from std_srvs.srv import Empty, EmptyResponse, Trigger, TriggerResponse
 
 from RpiMotorLib import RpiMotorLib
 
@@ -36,10 +36,14 @@ def degToSteps(deg, steptype):
 #}
 def motorCmd_cb(request):
     # Unpack JSON message
-    data = json.loads(request.data)
-    parameters = data['parameters']
-    rotateCommand(parameters['degree'], parameters['direction'])
-    return EmptyResponse()
+    #data = json.loads(request.data)
+    #parameters = data['parameters']
+    #rotateCommand(parameters['degree'], parameters['direction'])
+    #return EmptyResponse()
+    return TriggerResponse(
+        success=True,
+        message="Hey, roger that; we'll be right there!"
+    )
 
 def rotateCommand(degree, direction, steptype="1/32"):
     rospy.loginfo(rospy.get_caller_id() + ": Rotate {} degree in {} direction".format(degree, direction))
@@ -71,6 +75,6 @@ if __name__ == "__main__":
     stepPin = 21                # Step -> GPIO Pin
     motor_controller = RpiMotorLib.A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
 
-    rospy.Service("motor/cmd", String, motorCmd_cb)
+    rospy.Service("motor/cmd", Trigger, motorCmd_cb)
 
     rospy.spin()

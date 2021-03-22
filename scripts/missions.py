@@ -4,6 +4,7 @@ import rospy
 import time
 
 from std_msgs.msg import String
+from std_srvs.srv import Trigger, TriggerRequest
 
 class VideoTimelapse:
 
@@ -43,7 +44,7 @@ class PhotoTimelapse:
         rospy.loginfo("{} photo will be taken at each {} degree by {} sec".format(self.no_of_photo, self.interval_degree, self.interval_duration))
 
         rospy.wait_for_service('motor/cmd')
-        self.motor_cmd_service = rospy.ServiceProxy('motor/cmd', String)
+        self.motor_cmd_service = rospy.ServiceProxy('motor/cmd', Trigger)
 
         self.state = "ready"
 
@@ -59,7 +60,9 @@ class PhotoTimelapse:
             'degree': self.interval_degree, 
             'direction': self.direction
         })
-        _ = self.motor_cmd_service(motor_cmd_msg)
+        motor_cmd_msg2 = TriggerRequest()
+        result = self.motor_cmd_service(motor_cmd_msg2)
+        print(result)
 
     def start(self):
         self.state = "running"
