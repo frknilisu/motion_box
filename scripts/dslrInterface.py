@@ -13,6 +13,21 @@ import rospy
 from std_msgs.msg import Empty
 
 
+def take_shot_by_GPIO():
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    ShutterPin = 25
+    FocusPin = 23
+    GPIO.setup(FocusPin, GPIO.OUT)
+    GPIO.setup(ShutterPin, GPIO.OUT)
+    GPIO.output(FocusPin, True)
+    time.sleep(0.5)
+    GPIO.output(ShutterPin, True)
+    time.sleep(0.5)
+    GPIO.output(ShutterPin, False)
+    GPIO.output(FocusPin, False)
+
 def camera_info():
     camera_list = list(gp.Camera.autodetect())
     name, addr = camera_list[0]
@@ -79,20 +94,10 @@ def capture2():
     return 0
 
 
-shutterPin = 16
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(shutterPin, GPIO.OUT)
-def take_shot():
-    GPIO.output(shutterPin, GPIO.HIGH)
-    time.sleep(0.5)
-    GPIO.output(shutterPin, GPIO.LOW)
-    time.sleep(1)
-
-
 def callback_take_shot(msg):
     # TODO: call capture()
     print("callback_take_shot")
-
+    take_shot_by_GPIO()
 
 def callback_start_record(msg):
     # TODO: call start_record()
@@ -100,21 +105,11 @@ def callback_start_record(msg):
 
 
 if __name__ == "__main__":
-    try:
-        rospy.init_node('dslrInterface', log_level=rospy.DEBUG)
-        rate = rospy.Rate(​10.0)
+    rospy.init_node('dslrInterface', log_level=rospy.DEBUG)
+    rate = rospy.Rate(​10.0)
 
-        sub_take_shot = rospy.Subscriber(
-            "/take_shot", Empty, callback_take_shot)
-        sub_take_shot = rospy.Subscriber(
-            "/start_record", Empty, callback_start_record)
-        # TODO: /stop_record
-        while not​ rospy.is_shutdown():
-            rospy.logdebug(​"There is a missing droid")​
-            rate.sleep()
+    rospy.Subscriber("/take_shot", Empty, callback_take_shot)
+    rospy.Subscriber("/start_record", Empty, callback_start_record)
+    # TODO: /stop_record
 
-            # rospy.spin()
-    except rospy.ROSInterruptException:
-        print("program interrupted before completion", file=sys.stderr)
-
-    sys.exit(main())
+    rospy.spin()
