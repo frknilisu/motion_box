@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Web Page Controlled Stepper</title>
+</head>
+<style>
+    input[type=text] { text-align: center }
+</style>
+<body>
+
+<h3>TIMELAPSE SETUP</h3>
+
+<div ng-app="myApp" ng-controller="myCtrl">
+
+    <form action="/timelapse" method="POST">
+        <label> Record Time <input type="text" id="record_time" name="record_time" ng-model="record_time" ng-change="recordTimeChanged()" maxlength="4" size="4"> mins </label>
+        <br><br>
+
+        <label> Play Time <input type="text" id="play_time" name="play_time" ng-model="play_time" ng-change="playTimeChanged()" maxlength="6" size="6"> secs </label>
+        <br><br>
+
+        <label> FPS <input type="text" id="fps" name="fps" ng-model="fps" ng-change="fpsChanged()" maxlength="2" size="4"> fps </label>
+        <label> # Of Photos: <input type="text" id="no_of_photos" name="no_of_photos" ng-model="no_of_photos" ng-change="photoNumberChanged()" size="4"> </label>
+        <br><br>
+
+        <label> Interval Time <input type="text" id="interval_time" name="interval_time" ng-model="interval_time" ng-change="intervalTimeChanged()" size="4"> sec </label>
+        <br><br>
+        <label> Video Speed: <input type="text" id="video_speed" name="video_speed" ng-model="video_speed" ng-change="videoSpeedChanged()" size="4"> x </label>
+        <br><br>
+        
+        <label> Degree <input type="text" id="degree" name="degree" ng-model="degree" value="180" size="5"> </label>
+        <br><br>
+    
+        <label><input type="radio" name="direction" ng-model="direction" value="True" checked> CW </label>
+        <label><input type="radio" name="direction" ng-model="direction" value="False"> CCW </label>
+        <br><br>
+    
+        <input type="submit" value="Submit" />
+    </form> 
+
+</div>
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope) {
+    $scope.recordTimeChanged = function() {
+        $scope.interval_time = $scope.record_time / $scope.no_of_photos;
+        $scope.video_speed = $scope.record_time / $scope.play_time;
+    };
+
+    $scope.playTimeChanged = function() {
+        $scope.no_of_photos = $scope.fps * $scope.play_time;
+        $scope.interval_time = $scope.record_time / $scope.no_of_photos;
+        $scope.video_speed = $scope.record_time / $scope.play_time;
+    };
+
+    $scope.fpsChanged = function() {
+        $scope.no_of_photos = $scope.fps * $scope.play_time;
+        $scope.interval_time = $scope.record_time / $scope.no_of_photos;
+    };
+
+    $scope.photoNumberChanged = function() {
+        $scope.play_time = $scope.no_of_photos / $scope.fps;
+        $scope.interval_time = $scope.record_time / $scope.no_of_photos;
+        $scope.video_speed = $scope.record_time / $scope.play_time;
+    };
+
+    $scope.intervalTimeChanged = function() {
+        $scope.no_of_photos = $scope.record_time / $scope.interval_time;
+        $scope.play_time = $scope.no_of_photos / $scope.fps;
+        $scope.video_speed = $scope.record_time / $scope.play_time;
+    };
+
+    $scope.videoSpeedChanged = function() {
+        $scope.play_time = $scope.record_time / $scope.video_speed;
+        $scope.no_of_photos = $scope.fps * $scope.play_time;
+        $scope.interval_time = $scope.record_time / $scope.no_of_photos;
+    };
+});
+</script>
+
+</body>
+</html>
