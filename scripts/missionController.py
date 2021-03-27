@@ -7,22 +7,22 @@ from std_msgs.msg import String
 
 from missions import VideoTimelapse, PhotoTimelapse
 
-controller = None
+mission = None
 
 def mission_photo_timelapse_cb(msg):
-    global controller
+    global mission
     
     rospy.loginfo("mission_photo_timelapse_cb()..")
     data = json.loads(msg.data)
     print(data)
     if data['command'] == "start":
-        if controller is None or not controller.is_running:
-            controller = PhotoTimelapse(msg)
+        if mission is None or not mission.is_running:
+            mission = PhotoTimelapse(data)
         else:
             rospy.logwarn("Controller is running already")
     elif data['command'] == "stop":
-        if not controller is None and controller.is_running:
-            controller.stop()
+        if not mission is None and mission.is_running:
+            mission.stop()
         else:
             rospy.logwarn("Controller is not running")
     else:
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     rospy.Subscriber("mission", String, mission_photo_timelapse_cb)
 
     while not rospy.is_shutdown():
-        if not controller is None and controller.state == "ready":
-            controller.start()
+        if not mission is None and mission.state == "ready":
+            mission.start()
         
         r.sleep()
