@@ -15,6 +15,8 @@
 #ifndef AMS_5600_h
 #define AMS_5600_h
 
+#include <cstdint>
+
 class AMS_5600
 {
   public:
@@ -22,22 +24,22 @@ class AMS_5600
     AMS_5600(void);
     int getAddress();       
     
-    word setMaxAngle(word newMaxAngle = -1);
-    word getMaxAngle();
+    uint16_t setMaxAngle(uint16_t newMaxAngle = -1);
+    uint16_t getMaxAngle();
     
-    word setStartPosition(word startAngle = -1);
-    word getStartPosition();
+    uint16_t setStartPosition(uint16_t startAngle = -1);
+    uint16_t getStartPosition();
     
-    word setEndPosition(word endAngle = -1);
-    word getEndPosition();
+    uint16_t setEndPosition(uint16_t endAngle = -1);
+    uint16_t getEndPosition();
     
-    word getRawAngle();
-    word getScaledAngle();
+    uint16_t getRawAngle();
+    uint16_t getScaledAngle();
     
     int  detectMagnet();
     int  getMagnetStrength();
     int  getAgc();
-    word getMagnitude();
+    uint16_t getMagnitude();
     
     int  getBurnCount();
     int  burnAngle();
@@ -48,11 +50,11 @@ class AMS_5600
   
     int _ams5600_Address;
       
-    word _rawStartAngle;
-    word _zPosition;
-    word _rawEndAngle;
-    word _mPosition;
-    word _maxAngle;
+    uint16_t _rawStartAngle;
+    uint16_t _zPosition;
+    uint16_t _rawEndAngle;
+    uint16_t _mPosition;
+    uint16_t _maxAngle;
     
     /* Registers */
     int _zmco;
@@ -75,7 +77,7 @@ class AMS_5600
     int _burn;
     
     int readOneByte(int in_adr);
-    word readTwoBytes(int in_adr_hi, int in_adr_lo);
+    uint16_t readTwoBytes(int in_adr_hi, int in_adr_lo);
     void writeOneByte(int adr_in, int dat_in);
 
    

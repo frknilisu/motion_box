@@ -11,8 +11,15 @@
 /* access the AMS 5600 “potuino” shield.
 /*
 /***************************************************/
+#include <iostream>
+#include <unistd.h>
+#include <errno.h>
+//#include <wiringPi.h>
+//#include <wiringPiI2C.h>
 
 #include "AS5600.h"
+
+using namespace std;
 
 /****************************************************
 /* Method: AMS_5600
@@ -47,7 +54,7 @@ AMS_5600::AMS_5600()
   _burn = 0xff;
 }
 /* mode = 0, output PWM, mode = 1 output analog (full range from 0% to 100% between GND and VDD*/
-void AMS_5600::setOutPut(unsigned int mode){
+void AMS_5600::setOutPut(uint8_t mode){
     uint8_t config_status;
     config_status = readOneByte(_conf_lo);
     if(mode == 1){
@@ -77,9 +84,9 @@ int AMS_5600::getAddress()
 /* magnet.  Setting this register zeros out max position
 /* register.
 /*******************************************************/
-word AMS_5600::setMaxAngle(word newMaxAngle)
+uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
 {
-  word retVal;
+  uint16_t retVal;
   if(newMaxAngle == -1)
   {
     _maxAngle = getRawAngle();
@@ -88,9 +95,10 @@ word AMS_5600::setMaxAngle(word newMaxAngle)
     _maxAngle = newMaxAngle;
 
   writeOneByte(_mang_hi, highByte(_maxAngle));
-  delay(2); 
+  sleep(2);//sleeps for 3 second
+
   writeOneByte(_mang_lo, lowByte(_maxAngle)); 
-  delay(2);         
+  sleep(2);         
 
   retVal = readTwoBytes(_mang_hi, _mang_lo);
   return retVal;
@@ -102,7 +110,7 @@ word AMS_5600::setMaxAngle(word newMaxAngle)
 /* Out: value of max angle register
 /* Description: gets value of maximum angle register.
 /*******************************************************/
-word AMS_5600::getMaxAngle()
+uint16_t AMS_5600::getMaxAngle()
 {
   return readTwoBytes(_mang_hi, _mang_lo);
 }
@@ -115,19 +123,21 @@ word AMS_5600::getMaxAngle()
 /* If no value is provided, method will read position of
 /* magnet.  
 /*******************************************************/
-word AMS_5600::setStartPosition(word startAngle)
+uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 {
   if(startAngle == -1)
   {
     _rawStartAngle = getRawAngle();
   }
   else
+  {
     _rawStartAngle = startAngle;
+  }
 
   writeOneByte(_zpos_hi, highByte(_rawStartAngle));
-  delay(2); 
+  sleep(2); 
   writeOneByte(_zpos_lo, lowByte(_rawStartAngle)); 
-  delay(2);                
+  sleep(2);                
   _zPosition = readTwoBytes(_zpos_hi, _zpos_lo);
   
   return(_zPosition);
@@ -139,7 +149,7 @@ word AMS_5600::setStartPosition(word startAngle)
 /* Out: value of start position register
 /* Description: gets value of start position register.
 /*******************************************************/
-word AMS_5600::getStartPosition()
+uint16_t AMS_5600::getStartPosition()
 {
   return readTwoBytes(_zpos_hi, _zpos_lo);
 }  
@@ -152,7 +162,7 @@ word AMS_5600::getStartPosition()
 /* If no value is provided, method will read position of
 /* magnet.  
 /*******************************************************/
-word AMS_5600::setEndPosition(word endAngle)
+uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
 {
   if(endAngle == -1)
     _rawEndAngle = getRawAngle();
@@ -160,9 +170,9 @@ word AMS_5600::setEndPosition(word endAngle)
     _rawEndAngle = endAngle;
  
   writeOneByte(_mpos_hi, highByte(_rawEndAngle));
-  delay(2); 
+  sleep(2); 
   writeOneByte(_mpos_lo, lowByte(_rawEndAngle)); 
-  delay(2);                
+  sleep(2);                
   _mPosition = readTwoBytes(_mpos_hi, _mpos_lo);
   
   return(_mPosition);
@@ -174,9 +184,9 @@ word AMS_5600::setEndPosition(word endAngle)
 /* Out: value of end position register
 /* Description: gets value of end position register.
 /*******************************************************/
-word AMS_5600::getEndPosition()
+uint16_t AMS_5600::getEndPosition()
 {
-  word retVal = readTwoBytes(_mpos_hi, _mpos_lo);
+  uint16_t retVal = readTwoBytes(_mpos_hi, _mpos_lo);
   return retVal;
 }  
 
@@ -187,7 +197,7 @@ word AMS_5600::getEndPosition()
 /* Description: gets raw value of magnet position.
 /* start, end, and max angle settings do not apply
 /*******************************************************/
-word AMS_5600::getRawAngle()
+uint16_t AMS_5600::getRawAngle()
 {
   return readTwoBytes(_raw_ang_hi, _raw_ang_lo);
 }
@@ -200,7 +210,7 @@ word AMS_5600::getRawAngle()
 /* start, end, or max angle settings are used to 
 /* determine value
 /*******************************************************/
-word AMS_5600::getScaledAngle()
+uint16_t AMS_5600::getScaledAngle()
 {
   return readTwoBytes(_ang_hi, _ang_lo);
 }
@@ -275,7 +285,7 @@ int AMS_5600::getAgc()
 /* Out: value of magnitude register
 /* Description: gets value of magnitude register.
 /*******************************************************/
-word AMS_5600::getMagnitude()
+uint16_t AMS_5600::getMagnitude()
 {
   return readTwoBytes(_mag_hi, _mag_lo);  
 }
@@ -354,7 +364,7 @@ int AMS_5600::burnMaxAngleAndConfig()
   return retVal;
 }
 
-
+int fd, result;
 /*******************************************************
 /* Method: readOneByte
 /* In: register to read
@@ -364,7 +374,15 @@ int AMS_5600::burnMaxAngleAndConfig()
 int AMS_5600::readOneByte(int in_adr)
 {
   int retVal = -1;
-  Wire.beginTransmission(_ams5600_Address);
+  fd = wiringPiI2CSetup(_ams5600_Address);
+  cout << "Init result: "<< fd << endl;
+  //Wire.beginTransmission(_ams5600_Address);
+  result = wiringPiI2CWriteReg16(fd, 0x40, (i & 0xfff) );
+
+  if(result == -1)
+  {
+      cout << "Error.  Errno is: " << errno << endl;
+  }
   Wire.write(in_adr);
   Wire.endTransmission();
   Wire.requestFrom(_ams5600_Address, 1);
@@ -377,12 +395,12 @@ int AMS_5600::readOneByte(int in_adr)
 /*******************************************************
 /* Method: readTwoBytes
 /* In: two registers to read
-/* Out: data read from i2c as a word
+/* Out: data read from i2c as a uint16_t
 /* Description: reads two bytes register from i2c
 /*******************************************************/
-word AMS_5600::readTwoBytes(int in_adr_hi, int in_adr_lo)
+uint16_t AMS_5600::readTwoBytes(int in_adr_hi, int in_adr_lo)
 {
-  word retVal = -1;
+  uint16_t retVal = -1;
  
   /* Read Low Byte */
   Wire.beginTransmission(_ams5600_Address);
@@ -400,7 +418,7 @@ word AMS_5600::readTwoBytes(int in_adr_hi, int in_adr_lo)
   
   while(Wire.available() == 0);
   
-  word high = Wire.read();
+  uint16_t high = Wire.read();
   
   high = high << 8;
   retVal = high | low;
