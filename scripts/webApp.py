@@ -40,7 +40,7 @@ def timelapse():
     direction = bool(d["direction"])
     d["direction"] = direction
 
-    d["command"] = "debug"
+    d["command"] = "start"
     pub.publish(json.dumps(d))
 
     return redirect('/')

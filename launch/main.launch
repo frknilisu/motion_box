@@ -3,5 +3,6 @@
     <!-- <node name="encoder" pkg="motion_box" type="encoder.py" output="screen" /> -->
     <node name="missionController" pkg="motion_box" type="missionController.py" output="screen" />
     <!-- <node name="dslrInterface" pkg="motion_box" type="dslrInterface.py" output="screen" /> -->
-    <node name="remoteInterface" pkg="motion_box" type="remoteInterface.py" output="screen" />
+    <!-- <node name="remoteInterface" pkg="motion_box" type="remoteInterface.py" output="screen" /> -->
+    <node name="webApp" pkg="motion_box" type="webApp.py" output="screen" />
 </launch>

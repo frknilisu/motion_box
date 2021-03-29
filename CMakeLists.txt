@@ -164,7 +164,7 @@ install(PROGRAMS
   scripts/motorController.py
   scripts/missionController.py
   scripts/remoteInterface.py
-  scripts/control_webpage.py
+  scripts/webApp.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
