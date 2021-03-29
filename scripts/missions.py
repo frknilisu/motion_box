@@ -2,6 +2,7 @@
 
 import rospy
 import time
+import json
 
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -109,7 +110,7 @@ class PhotoTimelapse(Mission):
 
     def process(self):
         i = self.process_counter
-        if i >= self.no_of_photo or checkStopFlags():
+        if i >= self.no_of_photo or self.checkStopFlags():
             return
 
         rospy.loginfo('image{0:04d}.jpg'.format(i))
@@ -143,6 +144,7 @@ class PhotoTimelapse(Mission):
     def checkStopFlags(self):
         return self.state == "stopped" or self.state == "uninitalized"
 
+    """
     @property
     def state(self):
         return self._state
@@ -154,6 +156,8 @@ class PhotoTimelapse(Mission):
     @state.deleter
     def state(self):
         del self._state
+
+    """
 
 """
 def convert():
