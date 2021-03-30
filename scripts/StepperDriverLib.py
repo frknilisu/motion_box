@@ -94,7 +94,8 @@ class StepperMotor:
     def steps2Deg(self, steps):
         return float(steps * self.deg_per_step)
 
-    def rotate(self, degree=360, rpm=15, direction=False):
+    def rotate(self, degree=360, clockwise=False, rpm=15, steptype="half"):
+        direction = clockwise
         # Calculate time between steps in seconds
         step_delay = 60.0 / (self.steps_per_rev * rpm)
         
