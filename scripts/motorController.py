@@ -7,6 +7,7 @@ from std_msgs.msg import String
 from std_srvs.srv import Empty, EmptyResponse, Trigger, TriggerResponse
 
 from RpiMotorLib import RpiMotorLib
+from StepperDriverLib import StepperMotor
 
 CW, CCW = (False, True)
 
@@ -40,6 +41,7 @@ def motorCmd_cb(request):
     #parameters = data['parameters']
     #rotateCommand(parameters['degree'], parameters['direction'])
     #return EmptyResponse()
+    rotateCommand(360, "cw")
     return TriggerResponse(
         success=True,
         message="Hey, roger that; we'll be right there!"
@@ -48,23 +50,29 @@ def motorCmd_cb(request):
 def rotateCommand(degree, direction, steptype="1/32"):
     rospy.loginfo(rospy.get_caller_id() + ": Rotate {} degree in {} direction".format(degree, direction))
     
-    steps = degToSteps(degree)
+    #steps = degToSteps(degree)
 
     # Run the stepper if the direction is appropriate.
     if (direction == "cw"):
+        """
         motor_controller.motor_go(clockwise=CW, 
                     steptype=steptype, 
                     steps=steps, 
                     stepdelay=.005, 
                     verbose=True, 
                     initdelay=.05)
+        """
+        motor_controller.rotate(degree=degree, clockwise=CW)
     elif (run.direction == "ccw"):
+        """
         motor_controller.motor_go(clockwise=CCW, 
                     steptype=steptype, 
                     steps=steps, 
                     stepdelay=.005, 
                     verbose=True, 
                     initdelay=.05)
+        """
+        motor_controller.rotate(degree=degree, clockwise=CCW)
 
 if __name__ == "__main__":
     rospy.init_node('motorController', log_level=rospy.DEBUG)
@@ -73,7 +81,9 @@ if __name__ == "__main__":
     GPIO_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
     directionPin = 20           # Direction -> GPIO Pin
     stepPin = 21                # Step -> GPIO Pin
-    motor_controller = RpiMotorLib.A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
+    #motor_controller = RpiMotorLib.A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
+
+    motor_controller = StepperMotor([11, 15, 16, 18])
 
     rospy.Service("motor/cmd", Trigger, motorCmd_cb)
 

@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 from time import sleep
+import math
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -47,7 +48,7 @@ class DRV8825:
 """
 
 """
-motor = StepperMotor(pins=(7, 11, 13, 15))
+motor = StepperMotor(pins=[11, 15, 16, 18])
 """
 class StepperMotor:
 
@@ -81,19 +82,20 @@ class StepperMotor:
     def clearPins(self):
         self.setPins((GPIO.LOW, )*len(self.pins))
 
-    def step(self, seq_idx):
+    def step(self):
         """Take a step in current direction"""
         self.setPins(self.Seq[self.stepCount % len(self.Seq)])
         self.stepCount += 1
 
     def deg2Steps(self, degree):
         #return int(round(deg/self.stepSize))
-        return math.fabs(degree / self.deg_per_step)
+        return math.floor(degree / self.deg_per_step)
 
     def steps2Deg(self, steps):
         return float(steps * self.deg_per_step)
 
-    def rotate(self, degree=360, rpm=15, direction=False):
+    def rotate(self, degree=360, clockwise=False, rpm=15, steptype="half"):
+        direction = clockwise
         # Calculate time between steps in seconds
         step_delay = 60.0 / (self.steps_per_rev * rpm)
         
@@ -109,6 +111,7 @@ class StepperMotor:
             self.step()
             sleep(step_delay)
             self.angle += self.deg_per_step if direction else -self.deg_per_step
+            print("stepCount: {}, angle: {:.2f}, stepsToDeg: {:.2f}".format(self.stepCount, self.angle, self.steps2Deg(self.stepCount)))
             #self.simulateEncoder()
         
         if not direction:
