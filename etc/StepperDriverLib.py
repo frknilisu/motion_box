@@ -1,6 +1,10 @@
 import RPi.GPIO as GPIO
 from time import sleep
 
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+
+"""
 class DRV8825:
     def __init__(self, stepPin, dirPin, enablePin, modePins):
         self.stepPin = stepPin
@@ -35,11 +39,16 @@ class DRV8825:
             GPIO.output(self.stepPin, GPIO.LOW)
             sleep(self.delay)
 
+        print("stepperDriver complete (turned " + dir + " " + str(steps) + " steps)")
+
     def setSpeed(self, rpm):
         pass
-        
+     
+"""
 
-
+"""
+motor = StepperMotor(pins=(7, 11, 13, 15))
+"""
 class StepperMotor:
 
     Seq = [(1, 0, 0, 1),
@@ -51,103 +60,65 @@ class StepperMotor:
            (0, 0, 1, 1),
            (0, 0, 0, 1)]
 
-    revsteps = 4096                # steps per revolution
-    stepSize = 360 / revsteps      # degree per step
-
-    def deg2Steps(self, deg):
-        return int(round(deg/self.stepSize))
-
-    def steps2Deg(self, steps):
-        return float(steps * self.stepSize)
-
-    # void stop()
-    # void currentState(float * position)
-
-    def __init__(self, pins):
+    def __init__(self, pins, steps_per_rev=4096.0):
         self.pins = pins
-        self.stepPin = self.pins[0]
-		self.directionPin = self.pins[1]
-		self.enablePin = self.pins[2]
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BOARD)
 
         GPIO.setup(self.pins, GPIO.OUT)
-        self._clearPins()
+        self.clearPins()
 
-        self.delay = .005/32
-
-        self.deg_per_step = 5.625 / 64  # for half-step drive (mode 3)
-        self.steps_per_rev = int(360 / self.deg_per_step)  # 4096
-
+        self.steps_per_rev = steps_per_rev    # steps per revolution
+        self.deg_per_step = 360.0 / steps_per_rev      # degree per step
+        
+        self.angle = 0.0
         self.stepCount = 0
-        self.seq_head = 0
-        self.step_delay = 0.1
 
         print("Stepper initialized")
-        
-    def enable(self, enable):
-        #set enable to high (i.e. power is NOT going to the motor)
-		GPIO.output(self.enablePin, not enable)
-
-    def _clearPins(self):
-        GPIO.output(self.pins, (False, )*len(self.pins))
-
-    def run(self, steps, clockwise):
-        GPIO.output(self.directionPin, clockwise)
-        for i in range(steps):
-            GPIO.output(self.stepPin, GPIO.HIGH)
-            #sleep(self.delay)
-            GPIO.output(self.stepPin, GPIO.LOW)
-            sleep(self.delay)
-            self.stepCount += 1
-
-        print("stepperDriver complete (turned " + dir + " " + str(steps) + " steps)")
-
-    def callback_cmd_step(self, msg):
-        speed = msg.speed
-        degree = msg.degree
-        direction = msg.direction
-        self.stepCount = 0
-        self.move(speed, degree, direction)
-
-    def setup(self):
-        GPIO.setup(self.pins, GPIO.OUT)
-        GPIO.output(self.pins, (False, )*len(self.pins))
-
-    def step(self):
-        """Take a step in current direction"""
-        if self.direction:
-            self.setPins(self.Seq[self.seq_head])
-            self.seq_head += 1
-        else:
-            self.setPins(self.Seq[self.seq_head])
-            self.seq_head -= 1
-
-        time.sleep(self.step_delay)
-
-        self.stepCount += 1
-        self._next_seq()
-
-    def _next_seq(self):
-        if(self.seq_head >= len(self.Seq)):
-            self.seq_head = 0
-        elif(self.seq_head < 0):
-            self.seq_head = len(self.Seq)-1
 
     def setPins(self, seq):
         """Set the pins with given sequence"""
         GPIO.output(self.pins, seq)
+    
+    def clearPins(self):
+        self.setPins((GPIO.LOW, )*len(self.pins))
 
-    def move(self, speed, degree, direction):
-        self.direction = direction   # ccw: false, cw: true
-        self.step_delay = 60.0 / (self.revsteps * speed)
+    def step(self, seq_idx):
+        """Take a step in current direction"""
+        self.setPins(self.Seq[self.stepCount % len(self.Seq)])
+        self.stepCount += 1
+
+    def deg2Steps(self, degree):
+        #return int(round(deg/self.stepSize))
+        return math.fabs(degree / self.deg_per_step)
+
+    def steps2Deg(self, steps):
+        return float(steps * self.deg_per_step)
+
+    def rotate(self, degree=360, rpm=15, direction=False):
+        # Calculate time between steps in seconds
+        step_delay = 60.0 / (self.steps_per_rev * rpm)
+        
+        # Convert degrees to steps
         numberOfSteps = self.deg2Steps(degree)
-        print("step_delay: {}, # of steps: {}".format(self.step_delay, numberOfSteps))
+
+        print("step_delay: {}, # of steps: {}".format(step_delay, numberOfSteps))
+
+        if not direction:
+            self.pins.reverse()
+
         for _ in range(0, numberOfSteps):
             self.step()
-            self.simulateEncoder()
+            sleep(step_delay)
+            self.angle += self.deg_per_step if direction else -self.deg_per_step
+            #self.simulateEncoder()
+        
+        if not direction:
+            self.pins.reverse()
+    	
+        self.clearPins()
 
+    """
     def simulateEncoder(self):
         new_msg = Int64()
         new_msg.data = self.stepCount
         self.pub_counter.publish(new_msg)
+    """
