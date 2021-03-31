@@ -14,7 +14,7 @@ def mission_photo_timelapse_cb(msg):
     
     rospy.loginfo(rospy.get_caller_id() + ": mission_photo_timelapse_cb()..")
     data = json.loads(msg.data)
-    rospy.loginfo(rospy.get_caller_id() + ": data = {}".format(data))
+    rospy.loginfo(rospy.get_caller_id() + ": data = {}".format(str(data)))
     if data['command'] == "start":
         if mission is None or not mission.is_running:
             mission = PhotoTimelapse(data)

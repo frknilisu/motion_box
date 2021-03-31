@@ -21,7 +21,7 @@ CW, CCW = (False, True)
 def motorCmd_cb(request):
     rospy.loginfo(rospy.get_caller_id() + ": motorCmd_cb()..")
     data = json.loads(request.data)
-    rospy.logdebug(rospy.get_caller_id() + ": " + data)
+    rospy.logdebug(rospy.get_caller_id() + ": data = {}".format(str(data)))
     rotateCommand(data['degree'], data['direction'])
     return StringTriggerResponse(
         success=True,
