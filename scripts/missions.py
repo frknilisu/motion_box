@@ -6,6 +6,7 @@ import json
 
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
+from motion_box.srv import StringTrigger, StringTriggerRequest, StringTriggerResponse
 
 from abc import ABC, abstractmethod
 
@@ -14,7 +15,7 @@ class Mission(ABC):
         self._state = "uninitialized"
 
         rospy.wait_for_service('motor/cmd')
-        self.motor_cmd_service = rospy.ServiceProxy('motor/cmd', Trigger)
+        self.motor_cmd_service = rospy.ServiceProxy('motor/cmd', StringTrigger)
 
         super().__init__()
 
@@ -122,8 +123,10 @@ class PhotoTimelapse(Mission):
             'direction': self.direction
         })
         motor_cmd_msg2 = TriggerRequest()
-        result = self.motor_cmd_service(motor_cmd_msg2)
-        print(result)
+        motor_cmd_msg3 = StringTriggerRequest()
+        motor_cmd_msg3.data = motor_cmd_msg
+        result = self.motor_cmd_service(motor_cmd_msg3)
+        print(result.success, result.message)
 
         self.process_counter += 1
 

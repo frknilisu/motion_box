@@ -5,6 +5,7 @@ import json
 
 from std_msgs.msg import String
 from std_srvs.srv import Empty, EmptyResponse, Trigger, TriggerResponse
+from motion_box.srv import StringTrigger, StringTriggerRequest, StringTriggerResponse
 
 from RpiMotorLib import RpiMotorLib
 from StepperDriverLib import StepperMotor
@@ -27,12 +28,12 @@ CW, CCW = (False, True)
 #    }
 #}
 def motorCmd_cb(request):
+    rospy.loginfo("motorCmd_cb()..")
     # Unpack JSON message
-    #data = json.loads(request.data)
-    #parameters = data['parameters']
-    #rotateCommand(parameters['degree'], parameters['direction'])
-    #return EmptyResponse()
-    return TriggerResponse(
+    data = json.loads(request.data)
+    print(data)
+    rotateCommand(data['degree'], data['direction'])
+    return StringTriggerResponse(
         success=True,
         message="Hey, roger that; we'll be right there!"
     )
@@ -73,6 +74,6 @@ if __name__ == "__main__":
 
     motor_controller = StepperMotor([11, 15, 16, 18])
 
-    rospy.Service("motor/cmd", Trigger, motorCmd_cb)
+    rospy.Service("motor/cmd", StringTrigger, motorCmd_cb)
 
     rospy.spin()
