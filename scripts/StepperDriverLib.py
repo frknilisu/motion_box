@@ -3,49 +3,59 @@ from time import sleep
 import math
 
 """
-GPIO_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
-directionPin = 20           # Direction -> GPIO Pin
-stepPin = 21                # Step -> GPIO Pin
-motor = A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
+mode_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
+step_pin = 21                # Step -> GPIO Pin
+direction_pin = 20           # Direction -> GPIO Pin
+enable_pin = 
+motor = A4988_Nema(step_pin, direction_pin, enable_pin, mode_pins, "DRV8825")
 """
-class A4988Nema(object):
+class A4988_Nema(object):
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
     
     """ Class to control a Nema bi-polar stepper motor with a A4988 also tested with DRV8825"""
-    def __init__(self, direction_pin, step_pin, mode_pins, motor_type="A4988"):
-        """ class init method 3 inputs
-        (1) direction type=int , help=GPIO pin connected to DIR pin of IC
-        (2) step_pin type=int , help=GPIO pin connected to STEP of IC
-        (3) mode_pins type=tuple of 3 ints, help=GPIO pins connected to
-        Microstep Resolution pins MS1-MS3 of IC
-        (4) motor_type type=string, help=TYpe of motor two options: A4988 or DRV8825
+    def __init__(self, step_pin, direction_pin, enable_pin, mode_pins, motor_type="A4988"):
+        """ class init method 5 inputs
+        (1) step_pin type=int , help=GPIO pin connected to STEP of IC
+        (2) direction_pin type=int , help=GPIO pin connected to DIR pin of IC
+        (3) enable_pin type=int , help=GPIO pin connected to EN pin of IC
+        (4) mode_pins type=tuple of 3 ints, help=GPIO pins connected to Microstep Resolution pins MS1-MS3 of IC
+        (5) motor_type type=string, help=Type of motor two options: A4988 or DRV8825
         """
+        self.step_pin = step_pin
+        self.direction_pin = direction_pin
+        self.enable_pin = enable_pin
+        self.mode_pins = mode_pins
         self.motor_type = motor_type
 
-        self.direction_pin = direction_pin
-        self.step_pin = step_pin
-        self.mode_pins = mode_pins
-
-        GPIO.setup(self.direction_pin, GPIO.OUT)
         GPIO.setup(self.step_pin, GPIO.OUT)
+        GPIO.setup(self.direction_pin, GPIO.OUT)
+        GPIO.setup(self.enable_pin, GPIO.OUT)
         GPIO.setup(self.mode_pins, GPIO.OUT)
 
         self.clearPins()
 
+        self.enable(False)
+
         self.stepCount = 0
 
-        print("Stepper initialized")
+        print("StepperDriver initialized")
 
     def clearPins(self):
-        GPIO.output(self.direction_pin, GPIO.LOW)
         GPIO.output(self.step_pin, GPIO.LOW)
+        GPIO.output(self.direction_pin, GPIO.LOW)
+        GPIO.output(self.enable_pin, GPIO.HIGH)
         GPIO.output(self.mode_pins, (GPIO.LOW, )*len(self.mode_pins))
+
+    def enable(self, enable):
+        GPIO.output(self.enable_pin, not enable)
 
     def step(self):
         GPIO.output(self.step_pin, GPIO.HIGH)
+        #sleep(self.step_delay)
         GPIO.output(self.step_pin, GPIO.LOW)
+        #sleep(self.step_delay)
         self.stepCount += 1
     
     def degToSteps(self, degree):
@@ -96,20 +106,13 @@ class A4988Nema(object):
         #resolution / (60 * rpm)
  
     def rotate(self, degree=90.0, clockwise=False, rpm=6, step_type="Full", verbose=False, init_delay=.05):
-        """ motor_go,  moves stepper motor based on 6 inputs
-         (1) clockwise, type=bool default=False
-         help="Turn stepper counterclockwise"
-         (2) steptype, type=string , default=Full help= type of drive to
-         step motor 5 options
-            (Full, Half, 1/4, 1/8, 1/16)
-         (3) steps, type=int, default=200, help=Number of steps sequence's
-         to execute. Default is one revolution , 200 in Full mode.
-         (4) stepdelay, type=float, default=0.05, help=Time to wait
-         (in seconds) between steps.
-         (5) verbose, type=bool  type=bool default=False
-         help="Write pin actions",
-         (6) initdelay, type=float, default=1mS, help= Intial delay after
-         GPIO pins initialized but before motor is moved.
+        """ rotate, moves stepper motor based on 6 inputs
+         (1) degree, type=float, default=90.0, help=Number of degree sequence's to execute. Default is one revolution , 200 in Full mode.
+         (2) clockwise, type=bool default=False, help="Turn stepper counterclockwise"
+         (3) rpm, type=int, default=6, help=Speed in rpm (in seconds) between steps.
+         (4) step_type, type=string, default=Full, help=Type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
+         (5) verbose, type=bool, default=False, help="Write pin actions",
+         (6) initdelay, type=float, default=1mS, help=Intial delay after GPIO pins initialized but before motor is moved.
         """
 
         try:
@@ -120,23 +123,20 @@ class A4988Nema(object):
 
             # Calculate time between steps in seconds
             step_delay = 60.0 / (self.steps_per_rev * rpm)
-            
+
             # Convert degrees to steps
             numberOfSteps = self.deg2Steps(degree)
 
             print("step_delay: {}, # of steps: {}".format(step_delay, numberOfSteps))
 
-            if not clockwise:
-                self.pins.reverse()
+            GPIO.output(self.direction_pin, clockwise)
+            self.enable(True)
 
             for _ in range(0, numberOfSteps):
                 self.step()
                 sleep(step_delay)
                 if verbose:
                     print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
-            
-            if not clockwise:
-                self.pins.reverse()
 
         except KeyboardInterrupt:
             print("User Keyboard Interrupt : RpiMotorLib:")
@@ -160,53 +160,10 @@ class A4988Nema(object):
             self.clearPins()
 
 
-
-"""
-class DRV8825:
-    def __init__(self, stepPin, dirPin, enablePin, modePins):
-        self.stepPin = stepPin
-        self.dirPin = dirPin
-        self.enablePin = enablePin
-        self.modePins = modePins
-
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-
-        GPIO.setup(self.stepPin, GPIO.OUT)
-        GPIO.setup(self.dirPin, GPIO.OUT)
-        GPIO.setup(self.enablePin, GPIO.OUT)
-        GPIO.setup(self.modePins, GPIO.OUT)
-
-        GPIO.output(self.modePins, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH)) # 1/32 resolution stepping
-
-        self.deg_per_step = 5.625 / 64  # for half-step drive (mode 3)
-        self.steps_per_rev = int(360 / self.deg_per_step)  # 4096
-
-        self.microsteps = 32
-        self.delay = 0.005/self.microsteps
-
-    def enable(self, enable):
-        GPIO.output(self.enablePin, not enable)
-
-    def step(self, steps, direction):
-        GPIO.output(self.dirPin, direction)
-        for i in range(steps):
-            GPIO.output(self.stepPin, GPIO.HIGH)
-            sleep(self.delay)
-            GPIO.output(self.stepPin, GPIO.LOW)
-            sleep(self.delay)
-
-        print("stepperDriver complete (turned " + dir + " " + str(steps) + " steps)")
-
-    def setSpeed(self, rpm):
-        pass
-     
-"""
-
 """
 motor = StepperMotor(pins=[11, 15, 16, 18])
 """
-class StepperMotor(object):
+class ULN2003A_BYJ(object):
 
     Seq = [(1, 0, 0, 1),
            (1, 0, 0, 0),
@@ -256,21 +213,15 @@ class StepperMotor(object):
         self.deg_per_step = 360.0 / steps_per_rev      # degree per step
 
     def rotate(self, degree=90.0, clockwise=False, rpm=6, step_type="Half", verbose=False, init_delay=.05):
-        """ motor_go,  moves stepper motor based on 6 inputs
-         (1) clockwise, type=bool default=False
-         help="Turn stepper counterclockwise"
-         (2) steptype, type=string , default=Full help= type of drive to
-         step motor 5 options
-            (Full, Half, 1/4, 1/8, 1/16)
-         (3) steps, type=int, default=200, help=Number of steps sequence's
-         to execute. Default is one revolution , 200 in Full mode.
-         (4) stepdelay, type=float, default=0.05, help=Time to wait
-         (in seconds) between steps.
-         (5) verbose, type=bool  type=bool default=False
-         help="Write pin actions",
-         (6) initdelay, type=float, default=1mS, help= Intial delay after
-         GPIO pins initialized but before motor is moved.
+        """ rotate, moves stepper motor based on 6 inputs
+         (1) clockwise, type=bool default=False help="Turn stepper counterclockwise"
+         (2) steptype, type=string , default=Full help= type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
+         (3) steps, type=int, default=200, help=Number of steps sequence's to execute. Default is one revolution , 200 in Full mode.
+         (4) stepdelay, type=float, default=0.05, help=Time to wait (in seconds) between steps.
+         (5) verbose, type=bool  type=bool default=False help="Write pin actions",
+         (6) initdelay, type=float, default=1mS, help= Intial delay after GPIO pins initialized but before motor is moved.
         """
+        
         try:
             self.set_resolution(step_type)
 
@@ -317,10 +268,3 @@ class StepperMotor(object):
                       .format(degree_calc(steps, steptype)))
         finally:
             self.clearPins()
-
-    """
-    def simulateEncoder(self):
-        new_msg = Int64()
-        new_msg.data = self.stepCount
-        self.pub_counter.publish(new_msg)
-    """
