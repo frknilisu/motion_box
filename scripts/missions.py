@@ -6,7 +6,7 @@ import json
 
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
-from motion_box.srv import StringTriggerRequest
+from motion_box.srv import StringTrigger, StringTriggerRequest
 
 from abc import ABC, abstractmethod
 

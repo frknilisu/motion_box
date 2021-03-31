@@ -4,7 +4,7 @@ import rospy
 import json
 
 from std_msgs.msg import String
-from motion_box.srv import StringTriggerResponse
+from motion_box.srv import StringTrigger, StringTriggerResponse
 
 from RpiMotorLib import RpiMotorLib
 from StepperDriverLib import A4988_Nema, ULN2003A_BYJ
