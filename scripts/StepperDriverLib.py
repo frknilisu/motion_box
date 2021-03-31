@@ -2,6 +2,9 @@ import RPi.GPIO as GPIO
 from time import sleep
 import math
 
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+
 """
 mode_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
 step_pin = 21                # Step -> GPIO Pin
@@ -10,9 +13,6 @@ enable_pin =
 motor = A4988_Nema(step_pin, direction_pin, enable_pin, mode_pins, "DRV8825")
 """
 class A4988_Nema(object):
-
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
     
     """ Class to control a Nema bi-polar stepper motor with a A4988 also tested with DRV8825"""
     def __init__(self, step_pin, direction_pin, enable_pin, mode_pins, motor_type="A4988"):
@@ -172,10 +172,7 @@ class ULN2003A_BYJ(object):
            (0, 1, 1, 0),
            (0, 0, 1, 0),
            (0, 0, 1, 1),
-           (0, 0, 0, 1)]
-
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BOARD)
+           (0, 0, 0, 1)]    
 
     def __init__(self, pins):
         self.pins = pins

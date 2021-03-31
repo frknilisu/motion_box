@@ -10,9 +10,6 @@ from std_msgs.msg import Int64
 
 import RPi.GPIO as GPIO
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BOARD)
-
 
 class Encoder:
 
