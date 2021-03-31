@@ -11,15 +11,6 @@ from StepperDriverLib import StepperMotor
 
 CW, CCW = (False, True)
 
-def degToSteps(deg, steptype):
-    microsteps =  {'Full': 1,
-                    'Half': 2,
-                    '1/4': 4,
-                    '1/8': 8,
-                    '1/16': 16,
-                    '1/32': 32}
-    return int(round((deg / 1.8) * microsteps[steptype]))
-
 # 'run': params('direction', 'speed')
 # 'move': params('direction', 'steps')
 # 'goTo': params('position')
@@ -41,16 +32,13 @@ def motorCmd_cb(request):
     #parameters = data['parameters']
     #rotateCommand(parameters['degree'], parameters['direction'])
     #return EmptyResponse()
-    rotateCommand(360, "cw")
     return TriggerResponse(
         success=True,
         message="Hey, roger that; we'll be right there!"
     )
 
-def rotateCommand(degree, direction, steptype="1/32"):
+def rotateCommand(degree, direction, step_type="1/32"):
     rospy.loginfo(rospy.get_caller_id() + ": Rotate {} degree in {} direction".format(degree, direction))
-    
-    #steps = degToSteps(degree)
 
     # Run the stepper if the direction is appropriate.
     if (direction == "cw"):
@@ -63,7 +51,7 @@ def rotateCommand(degree, direction, steptype="1/32"):
                     initdelay=.05)
         """
         motor_controller.rotate(degree=degree, clockwise=CW)
-    elif (run.direction == "ccw"):
+    elif (direction == "ccw"):
         """
         motor_controller.motor_go(clockwise=CCW, 
                     steptype=steptype, 
