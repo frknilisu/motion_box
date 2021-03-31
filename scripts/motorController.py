@@ -72,7 +72,7 @@ if __name__ == "__main__":
     stepPin = 21                # Step -> GPIO Pin
     #motor_controller = RpiMotorLib.A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
 
-    motor_controller = StepperMotor([11, 15, 16, 18])
+    motor_controller = ULN2003A_BYJ([11, 15, 16, 18])
 
     rospy.Service("motor/cmd", StringTrigger, motorCmd_cb)
 
