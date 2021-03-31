@@ -8,7 +8,7 @@ from std_srvs.srv import Empty, EmptyResponse, Trigger, TriggerResponse
 from motion_box.srv import StringTrigger, StringTriggerRequest, StringTriggerResponse
 
 from RpiMotorLib import RpiMotorLib
-from StepperDriverLib import StepperMotor
+from StepperDriverLib import A4988_Nema, ULN2003A_BYJ
 
 CW, CCW = (False, True)
 
