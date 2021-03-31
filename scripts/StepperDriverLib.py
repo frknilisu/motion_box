@@ -3,7 +3,7 @@ import time
 import sys
 import math
 
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 """

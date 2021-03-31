@@ -41,12 +41,13 @@ if __name__ == "__main__":
     rospy.init_node('motorController', log_level=rospy.DEBUG)
     r = rospy.Rate(10) # 10Hz
 
-    GPIO_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
-    directionPin = 20           # Direction -> GPIO Pin
-    stepPin = 21                # Step -> GPIO Pin
-    #motor_controller = RpiMotorLib.A4988Nema(directionPin, stepPin, GPIO_pins, "DRV8825")
+    mode_pins = (14, 15, 18)     # Microstep Resolution MS1-MS3 -> GPIO Pin
+    step_pin = 21                # Step -> GPIO Pin
+    direction_pin = 20           # Direction -> GPIO Pin
+    enable_pin = 16
+    #motor_controller = A4988_Nema(step_pin, direction_pin, enable_pin, mode_pins, "DRV8825")
 
-    motor_controller = ULN2003A_BYJ([11, 15, 16, 18])
+    motor_controller = ULN2003A_BYJ([17, 22, 23, 24])
 
     rospy.Service("motor/cmd", StringTrigger, motorCmd_cb)
 
