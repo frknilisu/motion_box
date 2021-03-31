@@ -213,7 +213,7 @@ class ULN2003A_BYJ(object):
 
         self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
 
-    def rotate(self, degree=90.0, clockwise=False, rpm=6, step_type="Half", verbose=False, init_delay=.05):
+    def rotate(self, degree=90.0, clockwise=False, rpm=3, step_type="Half", verbose=False, init_delay=.05):
         """ rotate, moves stepper motor based on 6 inputs
          (1) clockwise, type=bool default=False help="Turn stepper counterclockwise"
          (2) steptype, type=string , default=Full help= type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
@@ -244,7 +244,8 @@ class ULN2003A_BYJ(object):
                 sleep(step_delay)
                 if verbose:
                     print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
-                #self.simulateEncoder()
+            
+            print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
             
             if not clockwise:
                 self.pins.reverse()
