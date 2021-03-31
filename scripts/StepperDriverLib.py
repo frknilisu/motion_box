@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 from time import sleep
+import sys
 import math
 
 GPIO.setmode(GPIO.BOARD)
@@ -182,6 +183,9 @@ class ULN2003A_BYJ(object):
 
         self.stepCount = 0
 
+        self.steps_per_rev = 4096.0
+        self.deg_per_step = 360.0 / self.steps_per_rev
+
         print("Stepper initialized")
 
     def setPins(self, seq):
@@ -207,7 +211,7 @@ class ULN2003A_BYJ(object):
         if step_type == "Half":
             self.steps_per_rev = 4096.0    # steps per revolution
 
-        self.deg_per_step = 360.0 / steps_per_rev      # degree per step
+        self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
 
     def rotate(self, degree=90.0, clockwise=False, rpm=6, step_type="Half", verbose=False, init_delay=.05):
         """ rotate, moves stepper motor based on 6 inputs

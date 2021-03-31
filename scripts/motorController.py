@@ -42,7 +42,7 @@ def rotateCommand(degree, direction, step_type="1/32"):
     rospy.loginfo(rospy.get_caller_id() + ": Rotate {} degree in {} direction".format(degree, direction))
 
     # Run the stepper if the direction is appropriate.
-    if (direction == "cw"):
+    if (direction == "cw" or direction is False):
         """
         motor_controller.motor_go(clockwise=CW, 
                     steptype=steptype, 
@@ -52,7 +52,7 @@ def rotateCommand(degree, direction, step_type="1/32"):
                     initdelay=.05)
         """
         motor_controller.rotate(degree=degree, clockwise=CW)
-    elif (direction == "ccw"):
+    elif (direction == "ccw" or direction is True):
         """
         motor_controller.motor_go(clockwise=CCW, 
                     steptype=steptype, 
