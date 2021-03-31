@@ -10,7 +10,7 @@ GPIO.setwarnings(False)
 mode_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
 step_pin = 21                # Step -> GPIO Pin
 direction_pin = 20           # Direction -> GPIO Pin
-enable_pin = 
+enable_pin = 16
 motor = A4988_Nema(step_pin, direction_pin, enable_pin, mode_pins, "DRV8825")
 """
 class A4988_Nema(object):
@@ -59,7 +59,7 @@ class A4988_Nema(object):
         #time.sleep(self.step_delay)
         self.stepCount += 1
     
-    def degToSteps(self, degree):
+    def deg2Steps(self, degree):
         return math.floor(degree / self.deg_per_step)
         """
         step_type
@@ -102,11 +102,12 @@ class A4988_Nema(object):
             print("Error invalid steptype: {}".format(step_type))
             quit()
 
-        self.steps_per_rev = self.deg2Steps(360)
+        self.steps_per_rev = 1600 #self.deg2Steps(360)
+        self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
         GPIO.output(self.mode_pins, resolution[step_type])
         #resolution / (60 * rpm)
  
-    def rotate(self, degree=90.0, clockwise=False, rpm=6, step_type="Full", verbose=False, init_delay=.05):
+    def rotate(self, degree=90.0, clockwise=False, rpm=3, step_type="1/8", verbose=False, init_delay=.05):
         """ rotate, moves stepper motor based on 6 inputs
          (1) degree, type=float, default=90.0, help=Number of degree sequence's to execute. Default is one revolution , 200 in Full mode.
          (2) clockwise, type=bool default=False, help="Turn stepper counterclockwise"
