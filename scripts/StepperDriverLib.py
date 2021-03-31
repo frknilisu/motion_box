@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-from time import sleep
+import time
 import sys
 import math
 
@@ -54,9 +54,9 @@ class A4988_Nema(object):
 
     def step(self):
         GPIO.output(self.step_pin, GPIO.HIGH)
-        #sleep(self.step_delay)
+        #time.sleep(self.step_delay)
         GPIO.output(self.step_pin, GPIO.LOW)
-        #sleep(self.step_delay)
+        #time.sleep(self.step_delay)
         self.stepCount += 1
     
     def degToSteps(self, degree):
@@ -120,7 +120,7 @@ class A4988_Nema(object):
             # dict resolution
             self.set_resolution(step_type)
 
-            sleep(init_delay)
+            time.sleep(init_delay)
 
             # Calculate time between steps in seconds
             step_delay = 60.0 / (self.steps_per_rev * rpm)
@@ -135,7 +135,7 @@ class A4988_Nema(object):
 
             for _ in range(0, numberOfSteps):
                 self.step()
-                sleep(step_delay)
+                time.sleep(step_delay)
                 if verbose:
                     print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
 
@@ -226,7 +226,7 @@ class ULN2003A_BYJ(object):
         try:
             self.set_resolution(step_type)
 
-            sleep(init_delay)
+            time.sleep(init_delay)
 
             # Calculate time between steps in seconds
             step_delay = 60.0 / (self.steps_per_rev * rpm)
@@ -241,7 +241,7 @@ class ULN2003A_BYJ(object):
 
             for _ in range(0, numberOfSteps):
                 self.step()
-                sleep(step_delay)
+                time.sleep(step_delay)
                 if verbose:
                     print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
             

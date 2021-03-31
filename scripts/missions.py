@@ -89,17 +89,19 @@ class PhotoTimelapse(Mission):
     def __init__(self, data):
         super().__init__()
 
-        self.record_duration = float(data.get('record_duration', 100.0))
-        self.video_length = float(data.get('video_length', 10.0))
+        self.record_time = float(data.get('record_time', 100.0))
+        self.play_time = float(data.get('play_time', 10.0))
         self.fps = int(data.get('fps', 25))
-        self.degree = float(data.get('degree', 10.0))
+        self.degree = float(data.get('degree', 90.0))
         self.direction = bool(data.get('direction', False))
+        self.no_of_photos1 = int(data.get('no_of_photos', 10))
+        self.interval_time1 = float(data.get('interval_time', 10.0))
 
-        self.no_of_photo = int(self.fps * self.video_length)
-        self.interval_duration = self.record_duration / self.no_of_photo
-        self.interval_degree = self.degree / self.no_of_photo
+        self.no_of_photos = int(self.fps * self.play_time)
+        self.interval_time = self.record_time / self.no_of_photos
+        self.interval_degree = self.degree / self.no_of_photos
 
-        rospy.loginfo(rospy.get_caller_id() + ": {} photo will be taken at each {} degree by {} sec".format(self.no_of_photo, self.interval_degree, self.interval_duration))
+        rospy.loginfo(rospy.get_caller_id() + ": {} photo will be taken at each {} degree by {} sec".format(self.no_of_photos, self.interval_degree, self.interval_time))
 
         self.process_counter = 0
 
@@ -107,7 +109,7 @@ class PhotoTimelapse(Mission):
 
     def process(self):
         i = self.process_counter
-        if i >= self.no_of_photo or self.checkStopFlags():
+        if i >= self.no_of_photos or self.checkStopFlags():
             return
 
         rospy.loginfo(rospy.get_caller_id() + ': image{0:04d}.jpg'.format(i))
@@ -127,9 +129,9 @@ class PhotoTimelapse(Mission):
     def start(self):
         self.state = "running"
         start_time = time.time()
-        for i in range(self.no_of_photo):
+        for i in range(self.no_of_photos):
             self.process()
-            time.sleep(self.interval_duration)
+            time.sleep(self.interval_time)
         
         elapsed_time = time.time() - start_time
         rospy.loginfo(rospy.get_caller_id() + ": Elapsed Time: {}".format(elapsed_time))
