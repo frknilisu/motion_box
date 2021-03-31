@@ -37,7 +37,7 @@ def timelapse():
     d["video_speed"] = video_speed
     degree = int(d["degree"])
     d["degree"] = degree
-    direction = bool(d["direction"])
+    direction = True if d["direction"] == "True" else False
     d["direction"] = direction
 
     d["command"] = "start"
