@@ -141,15 +141,15 @@ class A4988_Nema(object):
                     print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
 
         except KeyboardInterrupt:
-            print("User Keyboard Interrupt : RpiMotorLib:")
+            print("User Keyboard Interrupt : StepperDriverLib:")
         except Exception as motor_error:
             print(sys.exc_info()[0])
             print(motor_error)
-            print("RpiMotorLib  : Unexpected error:")
+            print("StepperDriverLib  : Unexpected error:")
         else:
             # print report status
             if verbose:
-                print("\nRpiMotorLib, Motor Run finished, Details:.\n")
+                print("\nStepperDriverLib, Motor Run finished, Details:.\n")
                 print("Motor type = {}".format(self.motor_type))
                 print("Clockwise = {}".format(clockwise))
                 print("Step Type = {}".format(step_type))
@@ -251,15 +251,15 @@ class ULN2003A_BYJ(object):
                 self.pins.reverse()
 
         except KeyboardInterrupt:
-            print("User Keyboard Interrupt : RpiMotorLib:")
+            print("User Keyboard Interrupt : StepperDriverLib:")
         except Exception as motor_error:
             print(sys.exc_info()[0])
             print(motor_error)
-            print("RpiMotorLib  : Unexpected error:")
+            print("StepperDriverLib  : Unexpected error:")
         else:
             # print report status
             if verbose:
-                print("\nRpiMotorLib, Motor Run finished, Details:.\n")
+                print("\nStepperDriverLib, Motor Run finished, Details:.\n")
                 print("Motor type = {}".format(self.motor_type))
                 print("Clockwise = {}".format(clockwise))
                 print("Step Type = {}".format(step_type))
