@@ -160,6 +160,7 @@ class A4988_Nema(object):
                       .format(degree_calc(steps, steptype)))
         finally:
             self.clearPins()
+            self.enable(False)
 
 
 """
@@ -209,9 +210,7 @@ class ULN2003A_BYJ(object):
         return float(steps * self.deg_per_step)
 
     def set_resolution(self, step_type):
-        if step_type == "Half":
-            self.steps_per_rev = 4096.0    # steps per revolution
-
+        self.steps_per_rev = 4096    # steps per revolution
         self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
 
     def rotate(self, degree=90.0, clockwise=False, rpm=3, step_type="Half", verbose=False, init_delay=.05):
