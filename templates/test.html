@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Page Controlled Stepper</title>
+</head>
+<style>
+    input[type=text] { text-align: center }
+</style>
+<body>
+
+<h3>Motor Test Menu</h3>
+
+<form action="/test" method="POST">
+    <label for="step_types">Step Type</label>
+    <select name="step_types" id="step_types">
+        <option value="Full Step">Full Step</option>
+        <option value="Half Step">Half Step</option>
+        <option value="1/4 Step">1/4 Step</option>
+        <option value="1/8 Step">1/8 Step</option>
+        <option value="1/16 Step">1/16 Step</option>
+        <option value="1/32 Step">1/32 Step</option>
+    </select>
+    <br><br>
+    
+    <label> Step Number <input type="number" id="step_number" name="step_number" min="0" step="1"></label>
+    <br><br>
+
+    <label> Speed <input type="number" id="speed" name="speed" min="0" step="0.1"> rpm </label>
+    <br><br>
+
+    <label><input type="radio" name="direction" value="True" checked> CW </label>
+    <label><input type="radio" name="direction" value="False"> CCW </label>
+    <br><br>
+
+    <input type="submit" value="Submit">
+</form> 
+
+</body>
+</html>

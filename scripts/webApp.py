@@ -45,6 +45,11 @@ def timelapse():
 
     return redirect('/')
 
+@app.route("/test", methods=["POST"])
+def test():
+    d = request.form.to_dict()
+    print(d)
+
 def signal_handler(signal, frame):
     rospy.signal_shutdown("end")
     sys.exit(0)
