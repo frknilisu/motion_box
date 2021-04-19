@@ -28,35 +28,12 @@ using namespace std;
 /***************************************************/
 AMS_5600::AMS_5600()
 {
-    /* set i2c address */ 
-    _ams5600_Address = 0x36;
-
-    /* load register values*/
-    /* c++ class forbids pre loading of variables */
-    _zmco = 0x00;
-    _zpos_hi = 0x01;
-    _zpos_lo = 0x02;
-    _mpos_hi = 0x03;
-    _mpos_lo = 0x04;
-    _mang_hi = 0x05;
-    _mang_lo = 0x06;
-    _conf_hi = 0x07;    
-    _conf_lo = 0x08;
-    _raw_ang_hi = 0x0c;
-    _raw_ang_lo = 0x0d;
-    _ang_hi = 0x0e;
-    _ang_lo = 0x0f;
-    _stat = 0x0b;
-    _agc = 0x1a;
-    _mag_hi = 0x1b;
-    _mag_lo = 0x1c;
-    _burn = 0xff;
 }
 
 void AMS_5600::setup()
 {
     // Setup I2C communication
-    _fd = wiringPiI2CSetup(DEVICE_ID);
+    _fd = wiringPiI2CSetup(DEVICE_ADDRESS);
     if (_fd == -1) {
         std::cout << "Failed to init I2C communication." << std::endl;
         return -1;
@@ -97,7 +74,7 @@ void AMS_5600::writeReg16(uint8_t reg, uint16_t value)
 /* mode = 0, output PWM, mode = 1 output analog (full range from 0% to 100% between GND and VDD*/
 void AMS_5600::setOutPut(uint8_t mode)
 {
-    uint8_t config_status = readReg8(_conf_lo);
+    uint8_t config_status = readReg8(REGS.CONF_L);
     if(mode == 1)
     {
         config_status = config_status & 0xcf;
@@ -106,7 +83,7 @@ void AMS_5600::setOutPut(uint8_t mode)
     {
         config_status = config_status & 0xef;
     }
-    writeReg8(_conf_lo, config_status); 
+    writeReg8(REGS.CONF_L, config_status); 
 }
 
 /****************************************************
@@ -117,7 +94,7 @@ void AMS_5600::setOutPut(uint8_t mode)
 /***************************************************/
 int AMS_5600::getAddress()
 {
-    return _ams5600_Address; 
+    return DEVICE_ADDRESS; 
 }
 
 /*******************************************************
@@ -136,10 +113,10 @@ uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
     else
         _maxAngle = newMaxAngle;
 
-    writeReg16(_mang_hi, _maxAngle); 
+    writeReg16(REGS.MANG_H, _maxAngle); 
     sleep(2);
 
-    return readReg16(_mang_hi);
+    return readReg16(REGS.MANG_H);
 }
 
 /*******************************************************
@@ -150,7 +127,7 @@ uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
 /*******************************************************/
 uint16_t AMS_5600::getMaxAngle()
 {
-    return readReg16(_mang_hi);
+    return readReg16(REGS.MANG_H);
 }
 
 /*******************************************************
@@ -172,10 +149,10 @@ uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
         _rawStartAngle = startAngle;
     }
 
-    writeReg16(_zpos_hi, _rawStartAngle); 
+    writeReg16(REGS.ZPOS_H, _rawStartAngle); 
     sleep(2);
 
-    _zPosition = readReg16(_zpos_hi);
+    _zPosition = readReg16(REGS.ZPOS_H);
   
     return _zPosition;
 }
@@ -188,7 +165,7 @@ uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 /*******************************************************/
 uint16_t AMS_5600::getStartPosition()
 {
-    return readReg16(_zpos_hi);
+    return readReg16(REGS.ZPOS_H);
 }  
 
 /*******************************************************
@@ -206,10 +183,10 @@ uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
     else
         _rawEndAngle = endAngle;
  
-    writeReg16(_mpos_hi, _rawEndAngle);
+    writeReg16(REGS.MPOS_H, _rawEndAngle);
     sleep(2);
     
-    _mPosition = readReg16(_mpos_hi);
+    _mPosition = readReg16(REGS.MPOS_H);
   
     return _mPosition;
 }
@@ -222,7 +199,7 @@ uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
 /*******************************************************/
 uint16_t AMS_5600::getEndPosition()
 {
-    return readReg16(_mpos_hi);
+    return readReg16(REGS.MPOS_H);
 }  
 
 /*******************************************************
@@ -234,7 +211,7 @@ uint16_t AMS_5600::getEndPosition()
 /*******************************************************/
 uint16_t AMS_5600::getRawAngle()
 {
-  return readReg16(_raw_ang_hi);
+    return readReg16(REGS.RAW_ANGLE_H);
 }
 
 /*******************************************************
@@ -247,7 +224,7 @@ uint16_t AMS_5600::getRawAngle()
 /*******************************************************/
 uint16_t AMS_5600::getScaledAngle()
 {
-  return readReg16(_ang_hi);
+    return readReg16(REGS.ANGLE_H);
 }
 
 /*******************************************************
@@ -264,7 +241,7 @@ bool AMS_5600::isMagnetDetected()
     /* MD high = magnet detected */
     /* ML high = AGC Maximum overflow, magnet to weak */ 
     /* MH high = AGC minimum overflow, Magnet to strong */
-    uint8_t magStatus = readReg8(_stat);
+    uint8_t magStatus = readReg8(REGS.STATUS);
     
     if(magStatus & (1 << 5)) {
         detected = true;
@@ -289,7 +266,7 @@ int AMS_5600::getMagnetStrength()
     /* MD high = magnet detected */
     /* ML high = AGC Maximum overflow, magnet to weak */ 
     /* MH high = AGC minimum overflow, Magnet to strong */ 
-    uint8_t magStatus = readReg8(_stat);
+    uint8_t magStatus = readReg8(REGS.STATUS);
     if(isMagnetDetected()) {
         retVal = 2; /*just right */
         if(magStatus & (1 << 4))
@@ -309,7 +286,7 @@ int AMS_5600::getMagnetStrength()
 /*******************************************************/
 int AMS_5600::getAgc()
 {
-    return static_cast<int>(readReg8(_agc));
+    return static_cast<int>(readReg8(REGS.AGC));
 }
 
 /*******************************************************
@@ -320,7 +297,7 @@ int AMS_5600::getAgc()
 /*******************************************************/
 uint16_t AMS_5600::getMagnitude()
 {
-  return readReg16(_mag_hi);
+    return readReg16(REGS.MAGNITUDE_H);
 }
 
 /*******************************************************
@@ -332,7 +309,7 @@ uint16_t AMS_5600::getMagnitude()
 /*******************************************************/
 int AMS_5600::getBurnCount()
 {
-    return static_cast<int>(readReg8(_zmco));
+    return static_cast<int>(readReg8(REGS.ZMCO));
 }
 
 /*******************************************************
@@ -359,7 +336,7 @@ int AMS_5600::burnAngle()
             if((_zPosition == 0) && (_mPosition == 0))
                 retVal = -3;
             else
-                writeReg8(_burn, 0x80);
+                writeReg8(REGS.BURN, 0x80);
         }
         else
         {
@@ -393,7 +370,7 @@ int AMS_5600::burnMaxAngleAndConfig()
         if(_maxAngle*0.087 < 18)
             retVal = -2;
         else
-            writeReg8(_burn, 0x40);    
+            writeReg8(REGS.BURN, 0x40);    
     }  
     else
     {

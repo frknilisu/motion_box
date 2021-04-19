@@ -21,7 +21,7 @@ class AMS_5600
 {
 public:
 
-    AMS_5600(void);
+    AMS_5600();
     int getAddress();       
 
     uint16_t setMaxAngle(uint16_t newMaxAngle = -1);
@@ -48,7 +48,7 @@ public:
     
 private:
   
-    int _ams5600_Address;
+    const int DEVICE_ADDRESS = 0x36;
       
     uint16_t _rawStartAngle;
     uint16_t _zPosition;
@@ -56,25 +56,35 @@ private:
     uint16_t _mPosition;
     uint16_t _maxAngle;
 
-    /* Registers */
-    int _zmco;
-    int _zpos_hi;    /*zpos[11:8] high nibble  START POSITION */
-    int _zpos_lo;    /*zpos[7:0] */
-    int _mpos_hi;    /*mpos[11:8] high nibble  STOP POSITION */
-    int _mpos_lo;    /*mpos[7:0] */
-    int _mang_hi;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
-    int _mang_lo;    /*mang[7:0] */
-    int _conf_hi;    
-    int _conf_lo;
-    int _raw_ang_hi;
-    int _raw_ang_lo;
-    int _ang_hi;
-    int _ang_lo;
-    int _stat;
-    int _agc;
-    int _mag_hi;
-    int _mag_lo;
-    int _burn;
+    struct Registers {
+
+        /* Configuration Registers */
+        constexpr int ZMCO = 0x00;
+        int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
+        int ZPOS_L = 0x02;    /*zpos[7:0] */
+        int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
+        int MPOS_L = 0x04;    /*mpos[7:0] */
+        int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
+        int MANG_L = 0x06;    /*mang[7:0] */
+        int CONF_H = 0x07;
+        int CONF_L = 0x08;
+
+        /* Output Registers */
+        int RAW_ANGLE_H = 0x0C;
+        int RAW_ANGLE_L = 0x0D;
+        int ANGLE_H = 0x0E;
+        int ANGLE_L = 0x0F;
+
+        /* Status Registers */
+        int STATUS = 0x0B;
+        int AGC = 0x1A;
+        int MAGNITUDE_H = 0x1B;
+        int MAGNITUDE_L = 0x1C;
+
+        /* Burn Commands */
+        int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
+
+    } REGS;
 
     int _fd;
 
