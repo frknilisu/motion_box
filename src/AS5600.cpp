@@ -14,8 +14,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <errno.h>
-//#include <wiringPi.h>
-//#include <wiringPiI2C.h>
+#include <wiringPiI2C.h>
 
 #include "AS5600.h"
 
@@ -29,41 +28,87 @@ using namespace std;
 /***************************************************/
 AMS_5600::AMS_5600()
 {
-  /* set i2c address */ 
-  _ams5600_Address = 0x36;
- 
-  /* load register values*/
-  /* c++ class forbids pre loading of variables */
-  _zmco = 0x00;
-  _zpos_hi = 0x01;
-  _zpos_lo = 0x02;
-  _mpos_hi = 0x03;
-  _mpos_lo = 0x04;
-  _mang_hi = 0x05;
-  _mang_lo = 0x06;
-  _conf_hi = 0x07;    
-  _conf_lo = 0x08;
-  _raw_ang_hi = 0x0c;
-  _raw_ang_lo = 0x0d;
-  _ang_hi = 0x0e;
-  _ang_lo = 0x0f;
-  _stat = 0x0b;
-  _agc = 0x1a;
-  _mag_hi = 0x1b;
-  _mag_lo = 0x1c;
-  _burn = 0xff;
+    /* set i2c address */ 
+    _ams5600_Address = 0x36;
+
+    /* load register values*/
+    /* c++ class forbids pre loading of variables */
+    _zmco = 0x00;
+    _zpos_hi = 0x01;
+    _zpos_lo = 0x02;
+    _mpos_hi = 0x03;
+    _mpos_lo = 0x04;
+    _mang_hi = 0x05;
+    _mang_lo = 0x06;
+    _conf_hi = 0x07;    
+    _conf_lo = 0x08;
+    _raw_ang_hi = 0x0c;
+    _raw_ang_lo = 0x0d;
+    _ang_hi = 0x0e;
+    _ang_lo = 0x0f;
+    _stat = 0x0b;
+    _agc = 0x1a;
+    _mag_hi = 0x1b;
+    _mag_lo = 0x1c;
+    _burn = 0xff;
 }
+
+void AMS_5600::setup()
+{
+    // Setup I2C communication
+    _fd = wiringPiI2CSetup(DEVICE_ID);
+    if (_fd == -1) {
+        std::cout << "Failed to init I2C communication." << std::endl;
+        return -1;
+    }
+    std::cout << "I2C communication successfully setup.\n";
+}
+
+uint8_t AMS_5600::readReg8(uint8_t reg)
+{
+    uint8_t readValue = (uint8_t) wiringPiI2CReadReg8(_fd, reg);
+    return readValue;
+}
+
+uint16_t AMS_5600::readReg16(uint8_t reg)
+{
+    uint16_t readValue = (uint16_t) wiringPiI2CReadReg16(_fd, reg);
+    return readValue;
+}
+
+void AMS_5600::writeReg8(uint8_t reg, uint8_t value)
+{
+    int res = wiringPiI2CWriteReg8(_fd, reg, value);
+    if (res) 
+    {
+        std::cout << "I2C error: " << res << std::endl;
+    }
+}
+
+void AMS_5600::writeReg16(uint8_t reg, uint16_t value)
+{
+    int res = wiringPiI2CWriteReg8(_fd, reg, value);
+    if (res) 
+    {
+        std::cout << "I2C error: " << res << std::endl;
+    }
+}
+
 /* mode = 0, output PWM, mode = 1 output analog (full range from 0% to 100% between GND and VDD*/
-void AMS_5600::setOutPut(uint8_t mode){
-    uint8_t config_status;
-    config_status = readOneByte(_conf_lo);
-    if(mode == 1){
+void AMS_5600::setOutPut(uint8_t mode)
+{
+    uint8_t config_status = readReg8(_conf_lo);
+    if(mode == 1)
+    {
         config_status = config_status & 0xcf;
-    }else{
+    } 
+    else
+    {
         config_status = config_status & 0xef;
     }
-    writeOneByte(_conf_lo, lowByte(config_status)); 
+    writeReg8(_conf_lo, config_status); 
 }
+
 /****************************************************
 /* Method: AMS_5600
 /* In: none
@@ -72,7 +117,7 @@ void AMS_5600::setOutPut(uint8_t mode){
 /***************************************************/
 int AMS_5600::getAddress()
 {
-  return _ams5600_Address; 
+    return _ams5600_Address; 
 }
 
 /*******************************************************
@@ -86,22 +131,15 @@ int AMS_5600::getAddress()
 /*******************************************************/
 uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
 {
-  uint16_t retVal;
-  if(newMaxAngle == -1)
-  {
-    _maxAngle = getRawAngle();
-  }
-  else
-    _maxAngle = newMaxAngle;
+    if(newMaxAngle == -1)
+        _maxAngle = getRawAngle();
+    else
+        _maxAngle = newMaxAngle;
 
-  writeOneByte(_mang_hi, highByte(_maxAngle));
-  sleep(2);//sleeps for 3 second
+    writeReg16(_mang_hi, _maxAngle); 
+    sleep(2);
 
-  writeOneByte(_mang_lo, lowByte(_maxAngle)); 
-  sleep(2);         
-
-  retVal = readTwoBytes(_mang_hi, _mang_lo);
-  return retVal;
+    return readReg16(_mang_hi);
 }
 
 /*******************************************************
@@ -112,7 +150,7 @@ uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
 /*******************************************************/
 uint16_t AMS_5600::getMaxAngle()
 {
-  return readTwoBytes(_mang_hi, _mang_lo);
+    return readReg16(_mang_hi);
 }
 
 /*******************************************************
@@ -125,22 +163,21 @@ uint16_t AMS_5600::getMaxAngle()
 /*******************************************************/
 uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 {
-  if(startAngle == -1)
-  {
-    _rawStartAngle = getRawAngle();
-  }
-  else
-  {
-    _rawStartAngle = startAngle;
-  }
+    if(startAngle == -1)
+    {
+        _rawStartAngle = getRawAngle();
+    }
+    else
+    {
+        _rawStartAngle = startAngle;
+    }
 
-  writeOneByte(_zpos_hi, highByte(_rawStartAngle));
-  sleep(2); 
-  writeOneByte(_zpos_lo, lowByte(_rawStartAngle)); 
-  sleep(2);                
-  _zPosition = readTwoBytes(_zpos_hi, _zpos_lo);
+    writeReg16(_zpos_hi, _rawStartAngle); 
+    sleep(2);
+
+    _zPosition = readReg16(_zpos_hi);
   
-  return(_zPosition);
+    return _zPosition;
 }
 
 /*******************************************************
@@ -151,7 +188,7 @@ uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 /*******************************************************/
 uint16_t AMS_5600::getStartPosition()
 {
-  return readTwoBytes(_zpos_hi, _zpos_lo);
+    return readReg16(_zpos_hi);
 }  
 
 /*******************************************************
@@ -164,18 +201,17 @@ uint16_t AMS_5600::getStartPosition()
 /*******************************************************/
 uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
 {
-  if(endAngle == -1)
-    _rawEndAngle = getRawAngle();
-  else
-    _rawEndAngle = endAngle;
+    if(endAngle == -1)
+        _rawEndAngle = getRawAngle();
+    else
+        _rawEndAngle = endAngle;
  
-  writeOneByte(_mpos_hi, highByte(_rawEndAngle));
-  sleep(2); 
-  writeOneByte(_mpos_lo, lowByte(_rawEndAngle)); 
-  sleep(2);                
-  _mPosition = readTwoBytes(_mpos_hi, _mpos_lo);
+    writeReg16(_mpos_hi, _rawEndAngle);
+    sleep(2);
+    
+    _mPosition = readReg16(_mpos_hi);
   
-  return(_mPosition);
+    return _mPosition;
 }
 
 /*******************************************************
@@ -186,8 +222,7 @@ uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
 /*******************************************************/
 uint16_t AMS_5600::getEndPosition()
 {
-  uint16_t retVal = readTwoBytes(_mpos_hi, _mpos_lo);
-  return retVal;
+    return readReg16(_mpos_hi);
 }  
 
 /*******************************************************
@@ -199,7 +234,7 @@ uint16_t AMS_5600::getEndPosition()
 /*******************************************************/
 uint16_t AMS_5600::getRawAngle()
 {
-  return readTwoBytes(_raw_ang_hi, _raw_ang_lo);
+  return readReg16(_raw_ang_hi);
 }
 
 /*******************************************************
@@ -212,30 +247,30 @@ uint16_t AMS_5600::getRawAngle()
 /*******************************************************/
 uint16_t AMS_5600::getScaledAngle()
 {
-  return readTwoBytes(_ang_hi, _ang_lo);
+  return readReg16(_ang_hi);
 }
 
 /*******************************************************
-/* Method: detectMagnet
+/* Method: isMagnetDetected
 /* In: none
-/* Out: 1 if magnet is detected, 0 if not
+/* Out: true if magnet is detected, false if not
 /* Description: reads status register and examines the 
 /* MH bit
 /*******************************************************/
-int AMS_5600::detectMagnet()
+bool AMS_5600::isMagnetDetected()
 {
-  int magStatus;
-  int retVal = 0;
-  /*0 0 MD ML MH 0 0 0*/
-  /* MD high = magnet detected*/
-  /* ML high = AGC Maximum overflow, magnet to weak*/ 
-  /* MH high = AGC minimum overflow, Magnet to strong*/
-  magStatus = readOneByte(_stat);
+    int detected = false;
+    /* 0 0 MD ML MH 0 0 0 */
+    /* MD high = magnet detected */
+    /* ML high = AGC Maximum overflow, magnet to weak */ 
+    /* MH high = AGC minimum overflow, Magnet to strong */
+    uint8_t magStatus = readReg8(_stat);
+    
+    if(magStatus & (1 << 5)) {
+        detected = true;
+    }
   
-  if(magStatus & 0x20)
-    retVal = 1; 
-  
-  return retVal;
+    return detected;
 }
 
 /*******************************************************
@@ -249,23 +284,21 @@ int AMS_5600::detectMagnet()
 /*******************************************************/
 int AMS_5600::getMagnetStrength()
 {
-  int magStatus;
-  int retVal = 0;
-  /*0 0 MD ML MH 0 0 0*/
-  /* MD high = magnet detected */
-  /* ML high = AGC Maximum overflow, magnet to weak*/ 
-  /* MH high = AGC minimum overflow, Magnet to strong*/ 
-  magStatus = readOneByte(_stat);
-  if(detectMagnet() ==1)
-  {
-      retVal = 2; /*just right */
-      if(magStatus & 0x10)
-        retVal = 1; /*to weak */
-      else if(magStatus & 0x08)
-        retVal = 3; /*to strong */
-  }
-  
-  return retVal;
+    int retVal = 0;
+    /* 0 0 MD ML MH 0 0 0 */
+    /* MD high = magnet detected */
+    /* ML high = AGC Maximum overflow, magnet to weak */ 
+    /* MH high = AGC minimum overflow, Magnet to strong */ 
+    uint8_t magStatus = readReg8(_stat);
+    if(isMagnetDetected()) {
+        retVal = 2; /*just right */
+        if(magStatus & (1 << 4))
+            retVal = 1; /*to weak */
+        else if(magStatus & (1 << 3))
+            retVal = 3; /*to strong */
+    }
+
+    return retVal;
 }
 
 /*******************************************************
@@ -276,7 +309,7 @@ int AMS_5600::getMagnetStrength()
 /*******************************************************/
 int AMS_5600::getAgc()
 {
-  return readOneByte(_agc);
+    return static_cast<int>(readReg8(_agc));
 }
 
 /*******************************************************
@@ -287,7 +320,7 @@ int AMS_5600::getAgc()
 /*******************************************************/
 uint16_t AMS_5600::getMagnitude()
 {
-  return readTwoBytes(_mag_hi, _mag_lo);  
+  return readReg16(_mag_hi);
 }
 
 /*******************************************************
@@ -299,7 +332,7 @@ uint16_t AMS_5600::getMagnitude()
 /*******************************************************/
 int AMS_5600::getBurnCount()
 {
-  return readOneByte(_zmco);
+    return static_cast<int>(readReg8(_zmco));
 }
 
 /*******************************************************
@@ -314,27 +347,31 @@ int AMS_5600::getBurnCount()
 /*******************************************************/
 int AMS_5600::burnAngle()
 {
-  int retVal = 1;
-  _zPosition = getStartPosition();
-  _mPosition = getEndPosition();
-  _maxAngle  = getMaxAngle();
+    int retVal = 1;
+    _zPosition = getStartPosition();
+    _mPosition = getEndPosition();
+    _maxAngle  = getMaxAngle();
   
-  if(detectMagnet() == 1)
-  {
-    if(getBurnCount() < 3)
+    if(isMagnetDetected())
     {
-      if((_zPosition == 0)&&(_mPosition ==0))
-        retVal = -3;
-      else
-        writeOneByte(_burn, 0x80);
-    }
+        if(getBurnCount() < 3)
+        {
+            if((_zPosition == 0) && (_mPosition == 0))
+                retVal = -3;
+            else
+                writeReg8(_burn, 0x80);
+        }
+        else
+        {
+            retVal = -2;
+        }
+    } 
     else
-      retVal = -2;
-  } 
-  else
-    retVal = -1;
+    {
+        retVal = -1;
+    }
     
-  return retVal;
+    return retVal;
 }
 
 /*******************************************************
@@ -348,96 +385,22 @@ int AMS_5600::burnAngle()
 /*******************************************************/
 int AMS_5600::burnMaxAngleAndConfig()
 {
-  int retVal = 1;
-  _maxAngle  = getMaxAngle();
+    int retVal = 1;
+    _maxAngle  = getMaxAngle();
   
-  if(getBurnCount() ==0)
-  {
-    if(_maxAngle*0.087 < 18)
-      retVal = -2;
+    if(getBurnCount() == 0)
+    {
+        if(_maxAngle*0.087 < 18)
+            retVal = -2;
+        else
+            writeReg8(_burn, 0x40);    
+    }  
     else
-      writeOneByte(_burn, 0x40);    
-  }  
-  else
-    retVal = -1;
+    {
+        retVal = -1;
+    }
     
-  return retVal;
-}
-
-int fd, result;
-/*******************************************************
-/* Method: readOneByte
-/* In: register to read
-/* Out: data read from i2c
-/* Description: reads one byte register from i2c
-/*******************************************************/
-int AMS_5600::readOneByte(int in_adr)
-{
-  int retVal = -1;
-  fd = wiringPiI2CSetup(_ams5600_Address);
-  cout << "Init result: "<< fd << endl;
-  //Wire.beginTransmission(_ams5600_Address);
-  result = wiringPiI2CWriteReg16(fd, 0x40, (i & 0xfff) );
-
-  if(result == -1)
-  {
-      cout << "Error.  Errno is: " << errno << endl;
-  }
-  Wire.write(in_adr);
-  Wire.endTransmission();
-  Wire.requestFrom(_ams5600_Address, 1);
-  while(Wire.available() == 0);
-  retVal = Wire.read();
-  
-  return retVal;
-}
-
-/*******************************************************
-/* Method: readTwoBytes
-/* In: two registers to read
-/* Out: data read from i2c as a uint16_t
-/* Description: reads two bytes register from i2c
-/*******************************************************/
-uint16_t AMS_5600::readTwoBytes(int in_adr_hi, int in_adr_lo)
-{
-  uint16_t retVal = -1;
- 
-  /* Read Low Byte */
-  Wire.beginTransmission(_ams5600_Address);
-  Wire.write(in_adr_lo);
-  Wire.endTransmission();
-  Wire.requestFrom(_ams5600_Address, 1);
-  while(Wire.available() == 0);
-  int low = Wire.read();
- 
-  /* Read High Byte */  
-  Wire.beginTransmission(_ams5600_Address);
-  Wire.write(in_adr_hi);
-  Wire.endTransmission();
-  Wire.requestFrom(_ams5600_Address, 1);
-  
-  while(Wire.available() == 0);
-  
-  uint16_t high = Wire.read();
-  
-  high = high << 8;
-  retVal = high | low;
-  
-  return retVal;
-}
-
-/*******************************************************
-/* Method: writeOneByte
-/* In: address and data to write
-/* Out: none
-/* Description: writes one byte to a i2c register
-/*******************************************************/
-void AMS_5600::writeOneByte(int adr_in, int dat_in)
-{
-  Wire.beginTransmission(_ams5600_Address);
-  Wire.write(adr_in); 
-  Wire.write(dat_in);
-  Wire.endTransmission();
+    return retVal;
 }
 
 /**********  END OF AMS 5600 CALSS *****************/

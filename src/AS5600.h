@@ -19,34 +19,34 @@
 
 class AMS_5600
 {
-  public:
-    
+public:
+
     AMS_5600(void);
     int getAddress();       
-    
+
     uint16_t setMaxAngle(uint16_t newMaxAngle = -1);
     uint16_t getMaxAngle();
-    
+
     uint16_t setStartPosition(uint16_t startAngle = -1);
     uint16_t getStartPosition();
-    
+
     uint16_t setEndPosition(uint16_t endAngle = -1);
     uint16_t getEndPosition();
-    
+
     uint16_t getRawAngle();
     uint16_t getScaledAngle();
-    
-    int  detectMagnet();
+
+    bool  isMagnetDetected();
     int  getMagnetStrength();
     int  getAgc();
     uint16_t getMagnitude();
-    
+
     int  getBurnCount();
     int  burnAngle();
     int  burnMaxAngleAndConfig();
     void setOutPut(uint8_t mode);
     
-  private:
+private:
   
     int _ams5600_Address;
       
@@ -55,7 +55,7 @@ class AMS_5600
     uint16_t _rawEndAngle;
     uint16_t _mPosition;
     uint16_t _maxAngle;
-    
+
     /* Registers */
     int _zmco;
     int _zpos_hi;    /*zpos[11:8] high nibble  START POSITION */
@@ -75,11 +75,14 @@ class AMS_5600
     int _mag_hi;
     int _mag_lo;
     int _burn;
-    
-    int readOneByte(int in_adr);
-    uint16_t readTwoBytes(int in_adr_hi, int in_adr_lo);
-    void writeOneByte(int adr_in, int dat_in);
 
-   
+    int _fd;
+
+    //methods
+    void setup();
+    uint8_t readReg8(uint8_t reg);
+    uint16_t readReg16(uint8_t reg);
+    void writeReg8(uint8_t reg, uint8_t value);
+    void writeReg16(uint8_t reg, uint16_t value);   
 };
 #endif
