@@ -22,7 +22,9 @@ class AMS_5600
 public:
 
     AMS_5600();
-    int getAddress();       
+    int getAddress();
+
+    void setup();
 
     uint16_t setMaxAngle(uint16_t newMaxAngle = -1);
     uint16_t getMaxAngle();
@@ -59,40 +61,39 @@ private:
     struct Registers {
 
         /* Configuration Registers */
-        constexpr int ZMCO = 0x00;
-        constexpr int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
-        constexpr int ZPOS_L = 0x02;    /*zpos[7:0] */
-        constexpr int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
-        constexpr int MPOS_L = 0x04;    /*mpos[7:0] */
-        constexpr int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
-        constexpr int MANG_L = 0x06;    /*mang[7:0] */
-        constexpr int CONF_H = 0x07;
-        constexpr int CONF_L = 0x08;
+        const int ZMCO = 0x00;
+        const int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
+        const int ZPOS_L = 0x02;    /*zpos[7:0] */
+        const int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
+        const int MPOS_L = 0x04;    /*mpos[7:0] */
+        const int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
+        const int MANG_L = 0x06;    /*mang[7:0] */
+        const int CONF_H = 0x07;
+        const int CONF_L = 0x08;
 
         /* Output Registers */
-        constexpr int RAW_ANGLE_H = 0x0C;
-        constexpr int RAW_ANGLE_L = 0x0D;
-        constexpr int ANGLE_H = 0x0E;
-        constexpr int ANGLE_L = 0x0F;
+        const int RAW_ANGLE_H = 0x0C;
+        const int RAW_ANGLE_L = 0x0D;
+        const int ANGLE_H = 0x0E;
+        const int ANGLE_L = 0x0F;
 
         /* Status Registers */
-        constexpr int STATUS = 0x0B;
-        constexpr int AGC = 0x1A;
-        constexpr int MAGNITUDE_H = 0x1B;
-        constexpr int MAGNITUDE_L = 0x1C;
+        const int STATUS = 0x0B;
+        const int AGC = 0x1A;
+        const int MAGNITUDE_H = 0x1B;
+        const int MAGNITUDE_L = 0x1C;
 
         /* Burn Commands */
-        constexpr int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
+        const int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
 
     } REGS;
 
     int _fd;
 
     //methods
-    void setup();
     uint8_t readReg8(uint8_t reg);
     uint16_t readReg16(uint8_t reg);
     void writeReg8(uint8_t reg, uint8_t value);
-    void writeReg16(uint8_t reg, uint16_t value);   
+    void writeReg16(uint8_t reg, uint16_t value);
 };
 #endif

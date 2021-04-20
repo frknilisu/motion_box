@@ -36,9 +36,9 @@ void AMS_5600::setup()
     _fd = wiringPiI2CSetup(DEVICE_ADDRESS);
     if (_fd == -1) {
         std::cout << "Failed to init I2C communication." << std::endl;
-        return -1;
+        return;
     }
-    std::cout << "I2C communication successfully setup.\n";
+    std::cout << "I2C communication successfully setup." << std::endl;
 }
 
 uint8_t AMS_5600::readReg8(uint8_t reg)

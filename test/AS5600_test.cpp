@@ -7,7 +7,7 @@
 
 int main (int argc, char **argv)
 {
-    AMS_5600 ams5600 = AMS_5600();
+    AMS_5600 ams5600;
     ams5600.setup();
 
     while (1) {
