@@ -60,29 +60,29 @@ private:
 
         /* Configuration Registers */
         constexpr int ZMCO = 0x00;
-        int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
-        int ZPOS_L = 0x02;    /*zpos[7:0] */
-        int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
-        int MPOS_L = 0x04;    /*mpos[7:0] */
-        int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
-        int MANG_L = 0x06;    /*mang[7:0] */
-        int CONF_H = 0x07;
-        int CONF_L = 0x08;
+        constexpr int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
+        constexpr int ZPOS_L = 0x02;    /*zpos[7:0] */
+        constexpr int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
+        constexpr int MPOS_L = 0x04;    /*mpos[7:0] */
+        constexpr int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
+        constexpr int MANG_L = 0x06;    /*mang[7:0] */
+        constexpr int CONF_H = 0x07;
+        constexpr int CONF_L = 0x08;
 
         /* Output Registers */
-        int RAW_ANGLE_H = 0x0C;
-        int RAW_ANGLE_L = 0x0D;
-        int ANGLE_H = 0x0E;
-        int ANGLE_L = 0x0F;
+        constexpr int RAW_ANGLE_H = 0x0C;
+        constexpr int RAW_ANGLE_L = 0x0D;
+        constexpr int ANGLE_H = 0x0E;
+        constexpr int ANGLE_L = 0x0F;
 
         /* Status Registers */
-        int STATUS = 0x0B;
-        int AGC = 0x1A;
-        int MAGNITUDE_H = 0x1B;
-        int MAGNITUDE_L = 0x1C;
+        constexpr int STATUS = 0x0B;
+        constexpr int AGC = 0x1A;
+        constexpr int MAGNITUDE_H = 0x1B;
+        constexpr int MAGNITUDE_L = 0x1C;
 
         /* Burn Commands */
-        int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
+        constexpr int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
 
     } REGS;
 
