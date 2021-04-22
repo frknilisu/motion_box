@@ -38,12 +38,15 @@ public:
     uint16_t getRawAngle();
     uint16_t getScaledAngle();
 
-    bool  isMagnetDetected();
-    int  getMagnetStrength();
-    int  getAgc();
+    uint8_t getStatus();
+    bool isMagnetTooStrong();
+    bool isMagnetTooWeak();
+    bool isMagnetDetected();
+
+    uint8_t  getAgc();
     uint16_t getMagnitude();
 
-    int  getBurnCount();
+    uint8_t  getBurnCount();
     int  burnAngle();
     int  burnMaxAngleAndConfig();
     void setOutPut(uint8_t mode);
@@ -58,35 +61,36 @@ private:
     uint16_t _mPosition;
     uint16_t _maxAngle;
 
-    struct Registers {
+    enum class RegisterMap : uint8_t
+    {
 
         /* Configuration Registers */
-        const int ZMCO = 0x00;
-        const int ZPOS_H = 0x01;    /*zpos[11:8] high nibble  START POSITION */
-        const int ZPOS_L = 0x02;    /*zpos[7:0] */
-        const int MPOS_H = 0x03;    /*mpos[11:8] high nibble  STOP POSITION */
-        const int MPOS_L = 0x04;    /*mpos[7:0] */
-        const int MANG_H = 0x05;    /*mang[11:8] high nibble  MAXIMUM ANGLE */
-        const int MANG_L = 0x06;    /*mang[7:0] */
-        const int CONF_H = 0x07;
-        const int CONF_L = 0x08;
+        ZMCO = 0x00,
+        ZPOS_H = 0x01,    /*zpos[11:8] high nibble  START POSITION */
+        ZPOS_L = 0x02,    /*zpos[7:0] */
+        MPOS_H = 0x03,    /*mpos[11:8] high nibble  STOP POSITION */
+        MPOS_L = 0x04,    /*mpos[7:0] */
+        MANG_H = 0x05,    /*mang[11:8] high nibble  MAXIMUM ANGLE */
+        MANG_L = 0x06,    /*mang[7:0] */
+        CONF_H = 0x07,
+        CONF_L = 0x08,
 
         /* Output Registers */
-        const int RAW_ANGLE_H = 0x0C;
-        const int RAW_ANGLE_L = 0x0D;
-        const int ANGLE_H = 0x0E;
-        const int ANGLE_L = 0x0F;
+        RAW_ANGLE_H = 0x0C,
+        RAW_ANGLE_L = 0x0D,
+        ANGLE_H = 0x0E,
+        ANGLE_L = 0x0F,
 
         /* Status Registers */
-        const int STATUS = 0x0B;
-        const int AGC = 0x1A;
-        const int MAGNITUDE_H = 0x1B;
-        const int MAGNITUDE_L = 0x1C;
+        STATUS = 0x0B,
+        AGC = 0x1A,
+        MAGNITUDE_H = 0x1B,
+        MAGNITUDE_L = 0x1C,
 
         /* Burn Commands */
-        const int BURN = 0xFF;        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
+        BURN = 0xFF        // [W] Burn_Angle = 0x80; Burn_Setting = 0x40
 
-    } REGS;
+    };
 
     int _fd;
 

@@ -83,7 +83,7 @@ void AMS_5600::setOutPut(uint8_t mode)
     {
         config_status = config_status & 0xef;
     }
-    writeReg8(REGS.CONF_L, config_status); 
+    writeReg8(RegisterMap::CONF_L, config_status); 
 }
 
 /****************************************************
@@ -113,10 +113,10 @@ uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
     else
         _maxAngle = newMaxAngle;
 
-    writeReg16(REGS.MANG_H, _maxAngle); 
+    writeReg16(RegisterMap::MANG_H, _maxAngle); 
     sleep(2);
 
-    return readReg16(REGS.MANG_H);
+    return readReg16(RegisterMap::MANG_H);
 }
 
 /*******************************************************
@@ -127,7 +127,7 @@ uint16_t AMS_5600::setMaxAngle(uint16_t newMaxAngle)
 /*******************************************************/
 uint16_t AMS_5600::getMaxAngle()
 {
-    return readReg16(REGS.MANG_H);
+    return readReg16(RegisterMap::MANG_H);
 }
 
 /*******************************************************
@@ -141,18 +141,14 @@ uint16_t AMS_5600::getMaxAngle()
 uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 {
     if(startAngle == -1)
-    {
         _rawStartAngle = getRawAngle();
-    }
     else
-    {
         _rawStartAngle = startAngle;
-    }
 
-    writeReg16(REGS.ZPOS_H, _rawStartAngle); 
+    writeReg16(RegisterMap::ZPOS_H, _rawStartAngle); 
     sleep(2);
 
-    _zPosition = readReg16(REGS.ZPOS_H);
+    _zPosition = readReg16(RegisterMap::ZPOS_H);
   
     return _zPosition;
 }
@@ -165,7 +161,7 @@ uint16_t AMS_5600::setStartPosition(uint16_t startAngle)
 /*******************************************************/
 uint16_t AMS_5600::getStartPosition()
 {
-    return readReg16(REGS.ZPOS_H);
+    return readReg16(RegisterMap::ZPOS_H);
 }  
 
 /*******************************************************
@@ -183,10 +179,10 @@ uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
     else
         _rawEndAngle = endAngle;
  
-    writeReg16(REGS.MPOS_H, _rawEndAngle);
+    writeReg16(RegisterMap::MPOS_H, _rawEndAngle);
     sleep(2);
     
-    _mPosition = readReg16(REGS.MPOS_H);
+    _mPosition = readReg16(RegisterMap::MPOS_H);
   
     return _mPosition;
 }
@@ -199,7 +195,7 @@ uint16_t AMS_5600::setEndPosition(uint16_t endAngle)
 /*******************************************************/
 uint16_t AMS_5600::getEndPosition()
 {
-    return readReg16(REGS.MPOS_H);
+    return readReg16(RegisterMap::MPOS_H);
 }  
 
 /*******************************************************
@@ -211,7 +207,7 @@ uint16_t AMS_5600::getEndPosition()
 /*******************************************************/
 uint16_t AMS_5600::getRawAngle()
 {
-    return readReg16(REGS.RAW_ANGLE_H);
+    return readReg16(RegisterMap::RAW_ANGLE_H);
 }
 
 /*******************************************************
@@ -224,58 +220,60 @@ uint16_t AMS_5600::getRawAngle()
 /*******************************************************/
 uint16_t AMS_5600::getScaledAngle()
 {
-    return readReg16(REGS.ANGLE_H);
+    return readReg16(RegisterMap::ANGLE_H);
+}
+
+uint8_t AMS_5600::getStatus()
+{
+    return readReg8(RegisterMap::STATUS) & 0b00111000;
 }
 
 /*******************************************************
 /* Method: isMagnetDetected
 /* In: none
-/* Out: true if magnet is detected, false if not
-/* Description: reads status register and examines the 
-/* MH bit
+/* Out: true if magnet is detected by AS5600
+/* Description: reads status register and examines the MD
 /*******************************************************/
 bool AMS_5600::isMagnetDetected()
 {
-    int detected = false;
-    /* 0 0 MD ML MH 0 0 0 */
-    /* MD high = magnet detected */
-    /* ML high = AGC Maximum overflow, magnet to weak */ 
-    /* MH high = AGC minimum overflow, Magnet to strong */
-    uint8_t magStatus = readReg8(REGS.STATUS);
-    
+    uint8_t magStatus = 0;
+    magStatus = getStatus();
     if(magStatus & (1 << 5)) {
-        detected = true;
+        return true;
     }
-  
-    return detected;
+    return false;
 }
 
 /*******************************************************
-/* Method: getMagnetStrength
+/* Method: isMagnetTooWeak
 /* In: none
-/* Out: 0 if no magnet is detected
-/*      1 if magnet is to weak
-/*      2 if magnet is just right
-/*      3 if magnet is to strong
-/* Description: reads status register andexamins the MH,ML,MD bits
+/* Out: true if magnet is too far to AS5600
+/* Description: reads status register and examines the ML
 /*******************************************************/
-int AMS_5600::getMagnetStrength()
+bool AMS_5600::isMagnetTooWeak()
 {
-    int retVal = 0;
-    /* 0 0 MD ML MH 0 0 0 */
-    /* MD high = magnet detected */
-    /* ML high = AGC Maximum overflow, magnet to weak */ 
-    /* MH high = AGC minimum overflow, Magnet to strong */ 
-    uint8_t magStatus = readReg8(REGS.STATUS);
-    if(isMagnetDetected()) {
-        retVal = 2; /*just right */
-        if(magStatus & (1 << 4))
-            retVal = 1; /*to weak */
-        else if(magStatus & (1 << 3))
-            retVal = 3; /*to strong */
+    uint8_t magStatus = 0;
+    magStatus = getStatus();
+    if(magStatus & (1 << 4)) {
+        return true;
     }
+    return false;
+}
 
-    return retVal;
+/*******************************************************
+/* Method: isMagnetTooStrong
+/* In: none
+/* Out: true if magnet is too close to AS5600
+/* Description: reads status register and examines the MH
+/*******************************************************/
+bool AMS_5600::isMagnetTooStrong()
+{
+    uint8_t magStatus = 0;
+    magStatus = getStatus();
+    if(magStatus & (1 << 3)) {
+        return true;
+    }
+    return false;
 }
 
 /*******************************************************
@@ -284,9 +282,9 @@ int AMS_5600::getMagnetStrength()
 /* Out: value of AGC register
 /* Description: gets value of AGC register.
 /*******************************************************/
-int AMS_5600::getAgc()
+uint8_t AMS_5600::getAgc()
 {
-    return static_cast<int>(readReg8(REGS.AGC));
+    return readReg8(RegisterMap::AGC);
 }
 
 /*******************************************************
@@ -297,7 +295,7 @@ int AMS_5600::getAgc()
 /*******************************************************/
 uint16_t AMS_5600::getMagnitude()
 {
-    return readReg16(REGS.MAGNITUDE_H);
+    return readReg16(RegisterMap::MAGNITUDE_H);
 }
 
 /*******************************************************
@@ -307,9 +305,9 @@ uint16_t AMS_5600::getMagnitude()
 /* Description: determines how many times chip has been
 /* permanently written to. 
 /*******************************************************/
-int AMS_5600::getBurnCount()
+uint8_t AMS_5600::getBurnCount()
 {
-    return static_cast<int>(readReg8(REGS.ZMCO));
+    return readReg8(RegisterMap::ZMCO);
 }
 
 /*******************************************************
@@ -336,7 +334,7 @@ int AMS_5600::burnAngle()
             if((_zPosition == 0) && (_mPosition == 0))
                 retVal = -3;
             else
-                writeReg8(REGS.BURN, 0x80);
+                writeReg8(RegisterMap::BURN, 0x80);
         }
         else
         {
@@ -370,7 +368,7 @@ int AMS_5600::burnMaxAngleAndConfig()
         if(_maxAngle*0.087 < 18)
             retVal = -2;
         else
-            writeReg8(REGS.BURN, 0x40);    
+            writeReg8(RegisterMap::BURN, 0x40);    
     }  
     else
     {
@@ -380,4 +378,4 @@ int AMS_5600::burnMaxAngleAndConfig()
     return retVal;
 }
 
-/**********  END OF AMS 5600 CALSS *****************/
+/**********  END OF AMS 5600 CLASS *****************/
