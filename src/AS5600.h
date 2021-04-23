@@ -1,28 +1,25 @@
 
 /****************************************************
-/* AMS 5600 class for Arduino platform
-/* Author: Tom Denton
-/* Date: 15 Dec 2014
-/* File: AMS_5600.h 
+/* AS5600 class for RaspberryPi platform
+/* Author: Abdullah Furkan Ilisu
+/* Date: 23 April 2021
+/* File: AS5600.h 
 /* Version 1.00
-/* www.ams.com
 /*  
-/* Description:  This class has been designed to
-/* access the AMS 5600 “potuino” shield.
+/* Description: 
 /*
 /***************************************************/
 
-#ifndef AMS_5600_h
-#define AMS_5600_h
+#ifndef AS5600_h
+#define AS5600_h
 
 #include <cstdint>
 
-class AMS_5600
+class AS5600
 {
 public:
-
-    AMS_5600();
-    int getAddress();
+    AS5600();
+    int getAddress() const;
 
     void setup();
 
@@ -49,7 +46,7 @@ public:
     uint8_t  getBurnCount();
     int  burnAngle();
     int  burnMaxAngleAndConfig();
-    void setOutPut(uint8_t mode);
+    void setConfig(uint8_t mode);
     
 private:
   
