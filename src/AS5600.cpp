@@ -111,13 +111,13 @@ void AS5600::writeReg16(uint8_t reg, uint16_t value)
 /***************************************************/
 void AS5600::setConfig(uint8_t mode)
 {
-    uint8_t config_status = readReg8(RegisterMap::CONF_L);
+    uint8_t config_status = readReg8(static_cast<uint8_t>(RegisterMap::CONF_L));
     if(mode == 1) {
         config_status = config_status & 0xcf;
     } else {
         config_status = config_status & 0xef;
     }
-    writeReg8(RegisterMap::CONF_L, config_status); 
+    writeReg8(static_cast<uint8_t>(RegisterMap::CONF_L), config_status); 
 }
 
 /****************************************************
@@ -148,10 +148,10 @@ uint16_t AS5600::setMaxAngle(uint16_t newMaxAngle)
         _maxAngle = newMaxAngle;
     }
 
-    writeReg16(RegisterMap::MANG_H, _maxAngle); 
+    writeReg16(static_cast<uint8_t>(RegisterMap::MANG_H), _maxAngle); 
     sleep(2);
 
-    return readReg16(RegisterMap::MANG_H);
+    return readReg16(static_cast<uint8_t>(RegisterMap::MANG_H));
 }
 
 /*******************************************************
@@ -162,7 +162,7 @@ uint16_t AS5600::setMaxAngle(uint16_t newMaxAngle)
 /*******************************************************/
 uint16_t AS5600::getMaxAngle()
 {
-    return readReg16(RegisterMap::MANG_H);
+    return readReg16(static_cast<uint8_t>(RegisterMap::MANG_H));
 }
 
 /*******************************************************
@@ -181,7 +181,7 @@ uint16_t AS5600::setStartPosition(uint16_t startAngle)
         _rawStartAngle = startAngle;
     }
 
-    writeReg16(RegisterMap::ZPOS_H, _rawStartAngle); 
+    writeReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H), _rawStartAngle); 
     sleep(2);
 
     return getStartPosition();
@@ -195,7 +195,7 @@ uint16_t AS5600::setStartPosition(uint16_t startAngle)
 /*******************************************************/
 uint16_t AS5600::getStartPosition()
 {
-    _zPosition = readReg16(RegisterMap::ZPOS_H);
+    _zPosition = readReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H));
     return _zPosition;
 }  
 
@@ -215,7 +215,7 @@ uint16_t AS5600::setEndPosition(uint16_t endAngle)
         _rawEndAngle = endAngle;
     }
  
-    writeReg16(RegisterMap::MPOS_H, _rawEndAngle);
+    writeReg16(static_cast<uint8_t>(RegisterMap::MPOS_H), _rawEndAngle);
     sleep(2);
     
     return getEndPosition();
@@ -229,8 +229,8 @@ uint16_t AS5600::setEndPosition(uint16_t endAngle)
 /*******************************************************/
 uint16_t AS5600::getEndPosition()
 {
-    _mPosition = readReg16(RegisterMap::MPOS_H);
-    return _mPosition
+    _mPosition = readReg16(static_cast<uint8_t>(RegisterMap::MPOS_H));
+    return _mPosition;
 }  
 
 /*******************************************************
@@ -242,7 +242,7 @@ uint16_t AS5600::getEndPosition()
 /*******************************************************/
 uint16_t AS5600::getRawAngle()
 {
-    return readReg16(RegisterMap::RAW_ANGLE_H);
+    return readReg16(static_cast<uint8_t>(RegisterMap::RAW_ANGLE_H));
 }
 
 /*******************************************************
@@ -255,12 +255,17 @@ uint16_t AS5600::getRawAngle()
 /*******************************************************/
 uint16_t AS5600::getScaledAngle()
 {
-    return readReg16(RegisterMap::ANGLE_H);
+    uint16_t ang16 = readReg16(RegisterMap::ANGLE_H);
+    int ang_h = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_H));
+    int ang_l = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_L));
+    double ang = ang_h * 22.5 + ang_l * 0.087890625;
+    cout << "ang16: " << ang16 << ", " << "ang: " << ang << endl;
+    return ang16;
 }
 
 uint8_t AS5600::getStatus()
 {
-    return readReg8(RegisterMap::STATUS) & 0b00111000;
+    return readReg8(static_cast<uint8_t>(RegisterMap::STATUS)) & 0b00111000;
 }
 
 /*******************************************************
@@ -319,7 +324,7 @@ bool AS5600::isMagnetTooStrong()
 /*******************************************************/
 uint8_t AS5600::getAgc()
 {
-    return readReg8(RegisterMap::AGC);
+    return readReg8(static_cast<uint8_t>(RegisterMap::AGC));
 }
 
 /*******************************************************
@@ -330,7 +335,7 @@ uint8_t AS5600::getAgc()
 /*******************************************************/
 uint16_t AS5600::getMagnitude()
 {
-    return readReg16(RegisterMap::MAGNITUDE_H);
+    return readReg16(static_cast<uint8_t>(RegisterMap::MAGNITUDE_H));
 }
 
 /*******************************************************
@@ -342,7 +347,7 @@ uint16_t AS5600::getMagnitude()
 /*******************************************************/
 uint8_t AS5600::getBurnCount()
 {
-    return readReg8(RegisterMap::ZMCO);
+    return readReg8(static_cast<uint8_t>(RegisterMap::ZMCO));
 }
 
 /*******************************************************
@@ -367,7 +372,7 @@ int AS5600::burnAngle()
             if((_zPosition == 0) && (_mPosition == 0)) {
                 retVal = -3;
             } else {
-                writeReg8(RegisterMap::BURN, 0x80);
+                writeReg8(static_cast<uint8_t>(RegisterMap::BURN), 0x80);
             }
         } else {
             retVal = -2;
@@ -397,7 +402,7 @@ int AS5600::burnMaxAngleAndConfig()
         if(_maxAngle*0.087 < 18) {
             retVal = -2;
         } else {
-            writeReg8(RegisterMap::BURN, 0x40);
+            writeReg8(static_cast<uint8_t>(RegisterMap::BURN), 0x40);
         }
     } else {
         retVal = -1;
