@@ -255,7 +255,7 @@ uint16_t AS5600::getRawAngle()
 /*******************************************************/
 uint16_t AS5600::getScaledAngle()
 {
-    uint16_t ang16 = readReg16(RegisterMap::ANGLE_H);
+    uint16_t ang16 = readReg16(static_cast<uint8_t>(RegisterMap::ANGLE_H));
     int ang_h = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_H));
     int ang_l = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_L));
     double ang = ang_h * 22.5 + ang_l * 0.087890625;
