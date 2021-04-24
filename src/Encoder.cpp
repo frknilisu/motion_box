@@ -14,6 +14,8 @@ int main(int argc, char* argv[]) {
     encoder.setup();
     uint16_t prev_raw_angle = 0;
     uint16_t curr_raw_angle = 0;
+    encoder.setStartPosition(20);
+    encoder.setEndPosition(360);
     std::cout << "Start Position: " << encoder.getStartPosition() << std::endl;
     std::cout << "End Position: " << encoder.getEndPosition() << std::endl;
     std::cout << "Max Angle: " << encoder.getMaxAngle() << std::endl;
