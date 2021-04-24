@@ -19,6 +19,22 @@
 
 using namespace std;
 
+uint8_t lowByte(uint16_t value)
+{
+    return (value & 0x00FF);
+}
+
+uint8_t highByte(uint16_t value)
+{
+    return ((value & 0xFF00) >> 8);
+}
+
+double stepToDegree(uint16_t step)
+{
+    double ang = highByte(step) * 22.5 + lowByte(step) * 0.087890625;
+    return ang;
+}
+
 /****************************************************
 /* Method: AS5600
 /* In: none
@@ -54,8 +70,8 @@ void AS5600::setup()
 /***************************************************/
 uint8_t AS5600::readReg8(uint8_t reg)
 {
-    uint8_t readValue = (uint8_t) wiringPiI2CReadReg8(_fd, reg);
-    return readValue;
+    uint8_t value = (uint8_t) wiringPiI2CReadReg8(_fd, reg);
+    return value;
 }
 
 /****************************************************
@@ -66,8 +82,9 @@ uint8_t AS5600::readReg8(uint8_t reg)
 /***************************************************/
 uint16_t AS5600::readReg16(uint8_t reg)
 {
-    uint16_t readValue = (uint16_t) wiringPiI2CReadReg16(_fd, reg);
-    return readValue;
+    uint16_t msb = (uint16_t) wiringPiI2CReadReg8(_fd, reg);
+    uint16_t lsb = (uint16_t) wiringPiI2CReadReg8(_fd, reg+1);
+    return ((msb << 8) | lsb);
 }
 
 /****************************************************
@@ -93,9 +110,10 @@ void AS5600::writeReg8(uint8_t reg, uint8_t value)
 /***************************************************/
 void AS5600::writeReg16(uint8_t reg, uint16_t value)
 {
-    int res = wiringPiI2CWriteReg8(_fd, reg, value);
-    if (res) {
-        std::cout << "I2C error: " << res << std::endl;
+    int res1 = wiringPiI2CWriteReg8(_fd, reg, highByte(value));
+    int res2 = wiringPiI2CWriteReg8(_fd, reg+1, lowByte(value));
+    if (res1 | res2) {
+        std::cout << "I2C error: " << res1 << ", " << res2 << std::endl;
         throw "I2C Write Error";
     }
 }
@@ -255,12 +273,7 @@ uint16_t AS5600::getRawAngle()
 /*******************************************************/
 uint16_t AS5600::getScaledAngle()
 {
-    uint16_t ang16 = readReg16(static_cast<uint8_t>(RegisterMap::ANGLE_H));
-    int ang_h = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_H));
-    int ang_l = readReg8(static_cast<uint8_t>(RegisterMap::ANGLE_L));
-    double ang = ang_h * 22.5 + ang_l * 0.087890625;
-    cout << "ang16: " << ang16 << ", " << "ang: " << ang << endl;
-    return ang16;
+    return readReg16(static_cast<uint8_t>(RegisterMap::ANGLE_H));
 }
 
 uint8_t AS5600::getStatus()
