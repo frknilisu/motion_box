@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     ros::NodeHandle nh;
     ROS_INFO("Hello, World!");
 
-    AS5600 encoder;
+    AS5600 encoder(0x40);
     encoder.setup();
     uint16_t start_raw_angle = 0;
     uint16_t prev_raw_angle = 0;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
             curr_raw_angle = encoder.getRawAngle();
             if(prev_raw_angle != curr_raw_angle) {
                 std::cout << "Raw Angle: " << curr_raw_angle << std::endl;
-                std::cout << "Scaled Angle: " << encoder.getScaledAngle() << std::endl;
+                std::cout << "Scaled Angle[0-4095]: " << encoder.getAngle() << std::endl;
                 std::cout << "Diff: " << curr_raw_angle - start_raw_angle << std::endl;
             }
             prev_raw_angle = curr_raw_angle;
