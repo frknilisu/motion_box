@@ -92,9 +92,9 @@ private:
     int _fd;
 
     //methods
-    uint8_t readReg8(RegisterMap reg);
-    uint16_t readReg16(RegisterMap reg);
-    void writeReg8(RegisterMap reg, uint8_t value);
-    void writeReg16(RegisterMap reg, uint16_t value);
+    uint8_t readReg8(uint8_t reg);
+    uint16_t readReg16(uint8_t reg);
+    void writeReg8(uint8_t reg, uint8_t value);
+    void writeReg16(uint8_t reg, uint16_t value);
 };
 #endif
