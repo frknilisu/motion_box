@@ -50,10 +50,6 @@ private:
     const int AS5600_I2C_ADDR = 0x36;
     
     uint8_t i2cAddress;
-    
-    uint16_t _zPosition;
-    uint16_t _mPosition;
-    uint16_t _maxAngle;
 
     enum class RegisterMap : uint8_t
     {
