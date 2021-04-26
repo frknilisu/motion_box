@@ -19,44 +19,37 @@ class AS5600
 {
 public:
     AS5600();
-    int getAddress() const;
+    AS5600(uint8_t address);
+    ~AS5600();
 
     void setup();
+    int getAddress() const;
 
-    uint16_t setMaxAngle(uint16_t newMaxAngle = -1);
-    uint16_t getMaxAngle();
-
-    uint16_t setStartPosition(uint16_t startAngle = -1);
+    uint8_t getBurnCount();
     uint16_t getStartPosition();
-
-    uint16_t setEndPosition(uint16_t endAngle = -1);
+    void setStartPosition(uint16_t startAngle = -1);
     uint16_t getEndPosition();
-
+    void setEndPosition(uint16_t endAngle = -1);
+    uint16_t getMaxAngle();
+    void setMaxAngle(uint16_t maxAngle = -1);
+    uint16_t getConfig();
+    void setConfig(uint8_t mode);
     uint16_t getRawAngle();
-    uint16_t getScaledAngle();
-
+    uint16_t getAngle();
     uint8_t getStatus();
     bool isMagnetTooStrong();
     bool isMagnetTooWeak();
     bool isMagnetDetected();
-
-    uint8_t  getAgc();
+    uint8_t getAgc();
     uint16_t getMagnitude();
-
-    uint8_t  getBurnCount();
-    int  burnAngle();
-    int  burnMaxAngleAndConfig();
-    void setConfig(uint8_t mode);
+    int burnAngle();
+    int burnSettings();
     
 private:
   
-    const int DEVICE_ADDRESS = 0x36;
-      
-    uint16_t _rawStartAngle;
-    uint16_t _zPosition;
-    uint16_t _rawEndAngle;
-    uint16_t _mPosition;
-    uint16_t _maxAngle;
+    const int AS5600_I2C_ADDR = 0x36;
+    
+    uint8_t i2cAddress;
 
     enum class RegisterMap : uint8_t
     {

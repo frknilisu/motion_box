@@ -29,10 +29,9 @@ uint8_t highByte(uint16_t value)
     return ((value & 0xFF00) >> 8);
 }
 
-double stepToDegree(uint16_t step)
+double convertRawAngleToDegrees(uint16_t rawAngle)
 {
-    double ang = highByte(step) * 22.5 + lowByte(step) * 0.087890625;
-    return ang;
+    return rawAngle * 0.087890625;
 }
 
 /****************************************************
@@ -42,6 +41,28 @@ double stepToDegree(uint16_t step)
 /* Description: constructor class for AS5600
 /***************************************************/
 AS5600::AS5600()
+{
+    i2cAddress = AS5600_I2C_ADDR;
+}
+
+/****************************************************
+/* Method: AS5600
+/* In: none
+/* Out: none
+/* Description: constructor class for AS5600
+/***************************************************/
+AS5600::AS5600(uint8_t address)
+{
+    i2cAddress = address;
+}
+
+/****************************************************
+/* Method: AS5600
+/* In: none
+/* Out: none
+/* Description: destructor class for AS5600
+/***************************************************/
+AS5600::~AS5600()
 {
 }
 
@@ -54,7 +75,7 @@ AS5600::AS5600()
 void AS5600::setup()
 {
     // Setup I2C communication
-    _fd = wiringPiI2CSetup(DEVICE_ADDRESS);
+    _fd = wiringPiI2CSetup(i2cAddress);
     if (_fd == -1) {
         std::cout << "Failed to init I2C communication." << std::endl;
         return;
@@ -63,63 +84,141 @@ void AS5600::setup()
 }
 
 /****************************************************
-/* Method: AS5600
+/* Method: getAddress
 /* In: none
-/* Out: none
-/* Description: constructor class for AS5600
+/* Out: i2c address of AS5600
+/* Description: returns i2c address of AS5600
 /***************************************************/
-uint8_t AS5600::readReg8(uint8_t reg)
+int AS5600::getAddress() const
 {
-    uint8_t value = (uint8_t) wiringPiI2CReadReg8(_fd, reg);
-    return value;
+    return i2cAddress; 
 }
 
-/****************************************************
-/* Method: AS5600
+/*******************************************************
+/* Method: getBurnCount
 /* In: none
-/* Out: none
-/* Description: constructor class for AS5600
-/***************************************************/
-uint16_t AS5600::readReg16(uint8_t reg)
+/* Out: value of zmco register
+/* Description: determines how many times chip has been
+/* permanently written to. 
+/*******************************************************/
+uint8_t AS5600::getBurnCount()
 {
-    uint16_t msb = (uint16_t) wiringPiI2CReadReg8(_fd, reg);
-    uint16_t lsb = (uint16_t) wiringPiI2CReadReg8(_fd, reg+1);
-    return ((msb << 8) | lsb);
+    return readReg8(static_cast<uint8_t>(RegisterMap::ZMCO));
 }
 
-/****************************************************
-/* Method: AS5600
+/*******************************************************
+/* Method: getStartPosition
 /* In: none
-/* Out: none
-/* Description: constructor class for AS5600
-/***************************************************/
-void AS5600::writeReg8(uint8_t reg, uint8_t value)
+/* Out: value of start position register
+/* Description: gets value of start position register.
+/*******************************************************/
+uint16_t AS5600::getStartPosition()
 {
-    int res = wiringPiI2CWriteReg8(_fd, reg, value);
-    if (res) {
-        std::cout << "I2C error: " << res << std::endl;
-        throw "I2C Write Error";
+    return readReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H));
+}
+
+/*******************************************************
+/* Method: setStartPosition
+/* In: new start angle position
+/* Out: value of start position register
+/* Description: sets a value in start position register.
+/* If no value is provided, method will read position of
+/* magnet.  
+/*******************************************************/
+void AS5600::setStartPosition(uint16_t startAngle)
+{
+    uint16_t rawAngle = 0;
+    if(startAngle == -1) {
+        rawAngle = getRawAngle();
+    } else {
+        rawAngle = startAngle;
     }
+
+    writeReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H), rawAngle); 
+    sleep(1);
+}
+
+/*******************************************************
+/* Method: getEndPosition
+/* In: none
+/* Out: value of end position register
+/* Description: gets value of end position register.
+/*******************************************************/
+uint16_t AS5600::getEndPosition()
+{
+    return readReg16(static_cast<uint8_t>(RegisterMap::MPOS_H));
+}
+
+/*******************************************************
+/* Method: setEndPosition
+/* In: new end angle position
+/* Out: value of end position register
+/* Description: sets a value in end position register.
+/* If no value is provided, method will read position of
+/* magnet.  
+/*******************************************************/
+void AS5600::setEndPosition(uint16_t endAngle)
+{
+    uint16_t rawAngle = 0;
+    if(endAngle == -1) {
+        rawAngle = getRawAngle();
+    } else {
+        rawAngle = endAngle;
+    }
+ 
+    writeReg16(static_cast<uint8_t>(RegisterMap::MPOS_H), rawAngle);
+    sleep(1);
+}
+
+/*******************************************************
+/* Method: getMaxAngle
+/* In: none
+/* Out: value of max angle register
+/* Description: gets value of maximum angle register.
+/*******************************************************/
+uint16_t AS5600::getMaxAngle()
+{
+    return readReg16(static_cast<uint8_t>(RegisterMap::MANG_H));
+}
+
+/*******************************************************
+/* Method: setMaxAngle
+/* In: new maximum angle to set OR none
+/* Out: value of max angle register
+/* Description: sets a value in maximum angle register.
+/* If no value is provided, method will read position of
+/* magnet.  Setting this register zeros out max position
+/* register.
+/*******************************************************/
+void AS5600::setMaxAngle(uint16_t maxAngle)
+{
+    uint16_t rawAngle = 0;   
+    if(newMaxAngle == -1) {
+        rawAngle = getRawAngle();
+    } else {
+        rawAngle = maxAngle;
+    }
+
+    writeReg16(static_cast<uint8_t>(RegisterMap::MANG_H), rawAngle); 
+    sleep(1);
 }
 
 /****************************************************
-/* Method: AS5600
+/* Method: getConfig
 /* In: none
 /* Out: none
 /* Description: constructor class for AS5600
+/* mode = 0, output PWM, 
+/* mode = 1 output analog (full range from 0% to 100% 
+/* between GND and VDD*/
 /***************************************************/
-void AS5600::writeReg16(uint8_t reg, uint16_t value)
+uint16_t AS5600::getConfig()
 {
-    int res1 = wiringPiI2CWriteReg8(_fd, reg, highByte(value));
-    int res2 = wiringPiI2CWriteReg8(_fd, reg+1, lowByte(value));
-    if (res1 | res2) {
-        std::cout << "I2C error: " << res1 << ", " << res2 << std::endl;
-        throw "I2C Write Error";
-    }
+    return readReg16(static_cast<uint8_t>(RegisterMap::CONF_H));
 }
 
 /****************************************************
-/* Method: AS5600
+/* Method: setConfig
 /* In: none
 /* Out: none
 /* Description: constructor class for AS5600
@@ -138,119 +237,6 @@ void AS5600::setConfig(uint8_t mode)
     writeReg8(static_cast<uint8_t>(RegisterMap::CONF_L), config_status); 
 }
 
-/****************************************************
-/* Method: AS5600
-/* In: none
-/* Out: i2c address of AS5600
-/* Description: returns i2c address of AS5600
-/***************************************************/
-int AS5600::getAddress() const
-{
-    return DEVICE_ADDRESS; 
-}
-
-/*******************************************************
-/* Method: setMaxAngle
-/* In: new maximum angle to set OR none
-/* Out: value of max angle register
-/* Description: sets a value in maximum angle register.
-/* If no value is provided, method will read position of
-/* magnet.  Setting this register zeros out max position
-/* register.
-/*******************************************************/
-uint16_t AS5600::setMaxAngle(uint16_t newMaxAngle)
-{
-    if(newMaxAngle == -1) {
-        _maxAngle = getRawAngle();
-    } else {
-        _maxAngle = newMaxAngle;
-    }
-
-    writeReg16(static_cast<uint8_t>(RegisterMap::MANG_H), _maxAngle); 
-    sleep(2);
-
-    return readReg16(static_cast<uint8_t>(RegisterMap::MANG_H));
-}
-
-/*******************************************************
-/* Method: getMaxAngle
-/* In: none
-/* Out: value of max angle register
-/* Description: gets value of maximum angle register.
-/*******************************************************/
-uint16_t AS5600::getMaxAngle()
-{
-    return readReg16(static_cast<uint8_t>(RegisterMap::MANG_H));
-}
-
-/*******************************************************
-/* Method: setStartPosition
-/* In: new start angle position
-/* Out: value of start position register
-/* Description: sets a value in start position register.
-/* If no value is provided, method will read position of
-/* magnet.  
-/*******************************************************/
-uint16_t AS5600::setStartPosition(uint16_t startAngle)
-{
-    if(startAngle == -1) {
-        _rawStartAngle = getRawAngle();
-    } else {
-        _rawStartAngle = startAngle;
-    }
-
-    writeReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H), _rawStartAngle); 
-    sleep(2);
-
-    return getStartPosition();
-}
-
-/*******************************************************
-/* Method: getStartPosition
-/* In: none
-/* Out: value of start position register
-/* Description: gets value of start position register.
-/*******************************************************/
-uint16_t AS5600::getStartPosition()
-{
-    _zPosition = readReg16(static_cast<uint8_t>(RegisterMap::ZPOS_H));
-    return _zPosition;
-}  
-
-/*******************************************************
-/* Method: setEndtPosition
-/* In: new end angle position
-/* Out: value of end position register
-/* Description: sets a value in end position register.
-/* If no value is provided, method will read position of
-/* magnet.  
-/*******************************************************/
-uint16_t AS5600::setEndPosition(uint16_t endAngle)
-{
-    if(endAngle == -1) {
-        _rawEndAngle = getRawAngle();
-    } else {
-        _rawEndAngle = endAngle;
-    }
- 
-    writeReg16(static_cast<uint8_t>(RegisterMap::MPOS_H), _rawEndAngle);
-    sleep(2);
-    
-    return getEndPosition();
-}
-
-/*******************************************************
-/* Method: getEndPosition
-/* In: none
-/* Out: value of end position register
-/* Description: gets value of end position register.
-/*******************************************************/
-uint16_t AS5600::getEndPosition()
-{
-    _mPosition = readReg16(static_cast<uint8_t>(RegisterMap::MPOS_H));
-    return _mPosition;
-}  
-
 /*******************************************************
 /* Method: getRawAngle
 /* In: none
@@ -264,18 +250,26 @@ uint16_t AS5600::getRawAngle()
 }
 
 /*******************************************************
-/* Method: getScaledAngle
+/* Method: getAngle
 /* In: none
 /* Out: value of scaled angle register
 /* Description: gets scaled value of magnet position.
 /* start, end, or max angle settings are used to 
 /* determine value
 /*******************************************************/
-uint16_t AS5600::getScaledAngle()
+uint16_t AS5600::getAngle()
 {
     return readReg16(static_cast<uint8_t>(RegisterMap::ANGLE_H));
 }
 
+/*******************************************************
+/* Method: getStatus
+/* In: none
+/* Out: value of scaled angle register
+/* Description: gets scaled value of magnet position.
+/* start, end, or max angle settings are used to 
+/* determine value
+/*******************************************************/
 uint8_t AS5600::getStatus()
 {
     return readReg8(static_cast<uint8_t>(RegisterMap::STATUS)) & 0b00111000;
@@ -330,7 +324,7 @@ bool AS5600::isMagnetTooStrong()
 }
 
 /*******************************************************
-/* Method: get Agc
+/* Method: getAgc
 /* In: none
 /* Out: value of AGC register
 /* Description: gets value of AGC register.
@@ -349,18 +343,6 @@ uint8_t AS5600::getAgc()
 uint16_t AS5600::getMagnitude()
 {
     return readReg16(static_cast<uint8_t>(RegisterMap::MAGNITUDE_H));
-}
-
-/*******************************************************
-/* Method: getBurnCount
-/* In: none
-/* Out: value of zmco register
-/* Description: determines how many times chip has been
-/* permanently written to. 
-/*******************************************************/
-uint8_t AS5600::getBurnCount()
-{
-    return readReg8(static_cast<uint8_t>(RegisterMap::ZMCO));
 }
 
 /*******************************************************
@@ -398,7 +380,7 @@ int AS5600::burnAngle()
 }
 
 /*******************************************************
-/* Method: burnMaxAngleAndConfig
+/* Method: burnSettings
 /* In: none
 /* Out: 1 success
 /*     -1 burn limit exceeded
@@ -406,7 +388,7 @@ int AS5600::burnAngle()
 /* Description: burns max angle and config data to chip.
 /* THIS CAN ONLY BE DONE 1 TIME
 /*******************************************************/
-int AS5600::burnMaxAngleAndConfig()
+int AS5600::burnSettings()
 {
     int retVal = 1;
     _maxAngle  = getMaxAngle();
@@ -422,6 +404,62 @@ int AS5600::burnMaxAngleAndConfig()
     }
     
     return retVal;
+}
+
+/****************************************************
+/* Method: readReg8
+/* In: none
+/* Out: none
+/* Description: constructor class for AS5600
+/***************************************************/
+uint8_t AS5600::readReg8(uint8_t reg)
+{
+    uint8_t value = (uint8_t) wiringPiI2CReadReg8(_fd, reg);
+    return value;
+}
+
+/****************************************************
+/* Method: readReg16
+/* In: none
+/* Out: none
+/* Description: constructor class for AS5600
+/***************************************************/
+uint16_t AS5600::readReg16(uint8_t reg)
+{
+    uint16_t msb = (uint16_t) wiringPiI2CReadReg8(_fd, reg);
+    uint16_t lsb = (uint16_t) wiringPiI2CReadReg8(_fd, reg+1);
+    return ((msb << 8) | lsb);
+}
+
+/****************************************************
+/* Method: writeReg8
+/* In: none
+/* Out: none
+/* Description: constructor class for AS5600
+/***************************************************/
+void AS5600::writeReg8(uint8_t reg, uint8_t value)
+{
+    int res = wiringPiI2CWriteReg8(_fd, reg, value);
+    if (res) {
+        std::cout << "I2C error: " << res << std::endl;
+        throw "I2C Write Error";
+    }
+}
+
+/****************************************************
+/* Method: writeReg16
+/* In: none
+/* Out: none
+/* Description: constructor class for AS5600
+/***************************************************/
+void AS5600::writeReg16(uint8_t reg, uint16_t value)
+{
+    int res1 = wiringPiI2CWriteReg8(_fd, reg, highByte(value));
+    int res2 = wiringPiI2CWriteReg8(_fd, reg+1, lowByte(value));
+    if (res1 | res2) {
+        std::cout << "I2C error: " << res1 << ", " << res2 << std::endl;
+        throw "I2C Write Error";
+    }
 }
 
 /**********  END OF AS5600 CLASS *****************/
