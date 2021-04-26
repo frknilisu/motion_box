@@ -193,7 +193,7 @@ uint16_t AS5600::getMaxAngle()
 void AS5600::setMaxAngle(uint16_t maxAngle)
 {
     uint16_t rawAngle = 0;   
-    if(newMaxAngle == -1) {
+    if(maxAngle == -1) {
         rawAngle = getRawAngle();
     } else {
         rawAngle = maxAngle;
@@ -358,13 +358,13 @@ uint16_t AS5600::getMagnitude()
 int AS5600::burnAngle()
 {
     int retVal = 1;
-    _zPosition = getStartPosition();
-    _mPosition = getEndPosition();
-    _maxAngle  = getMaxAngle();
+    uint16_t  startPosition = getStartPosition();
+    uint16_t endPosition = getEndPosition();
+    uint16_t maxAngle  = getMaxAngle();
   
     if(isMagnetDetected()) {
         if(getBurnCount() < 3) {
-            if((_zPosition == 0) && (_mPosition == 0)) {
+            if((startPosition == 0) && (endPosition == 0)) {
                 retVal = -3;
             } else {
                 writeReg8(static_cast<uint8_t>(RegisterMap::BURN), 0x80);
@@ -391,10 +391,10 @@ int AS5600::burnAngle()
 int AS5600::burnSettings()
 {
     int retVal = 1;
-    _maxAngle  = getMaxAngle();
+    uint16_t maxAngle  = getMaxAngle();
   
     if(getBurnCount() == 0) {
-        if(_maxAngle*0.087 < 18) {
+        if(maxAngle*0.087 < 18) {
             retVal = -2;
         } else {
             writeReg8(static_cast<uint8_t>(RegisterMap::BURN), 0x40);
