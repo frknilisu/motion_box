@@ -6,8 +6,11 @@
 
 #include "AS5600.h"
 
-double convertRawAngleToDegrees(uint16_t rawAngle)
+double convertRawAngleToDegrees(int rawAngle)
 {
+    if(rawAngle < 0) {
+        rawAngle += 4096;
+    }
     return rawAngle * 0.087890625;
 }
 
@@ -25,13 +28,16 @@ int main(int argc, char* argv[]) {
     encoder.setStartPosition();
     startPosition = encoder.getStartPosition();
     std::cout << "Start Position: " << startPosition << std::endl;
+
+    int diffPosition = 0;
     while(ros::ok()) {
         if(encoder.isMagnetDetected()) {
             currPosition = encoder.getRawAngle();
             if(prevPosition != currPosition) {
                 std::cout << "Current Position: " << currPosition << std::endl;
-                std::cout << "Diff: " << currPosition-startPosition << std::endl;
-                std::cout << "Diff Angle: " << convertRawAngleToDegrees(currPosition-startPosition) << std::endl;
+                diffPosition = currPosition - startPosition;
+                std::cout << "Diff: " << diffPosition << std::endl;
+                std::cout << "Diff Angle: " << convertRawAngleToDegrees(diffPosition) << std::endl;
             }
             prevPosition = currPosition;
         }
@@ -39,3 +45,4 @@ int main(int argc, char* argv[]) {
         ros::spinOnce();
     }
 }
+
