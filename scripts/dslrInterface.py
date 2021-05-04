@@ -13,6 +13,9 @@ import rospy
 from std_msgs.msg import Empty
 import RPi.GPIO as GPIO
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
 def take_shot_by_GPIO():
     ShutterPin = 25
     FocusPin = 23
