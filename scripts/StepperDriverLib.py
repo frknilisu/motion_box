@@ -43,7 +43,7 @@ class A4988_Nema(object):
 
         self.enable(False)
 
-        self.step_count = 0
+        self.stepCount = 0
         self.step_delay = 0.1
 
         logger.info("StepperDriver initialized")
@@ -59,7 +59,7 @@ class A4988_Nema(object):
         #time.sleep(self.step_delay)
         GPIO.output(self.step_pin, GPIO.LOW)
         #time.sleep(self.step_delay)
-        self.step_count += 1
+        self.stepCount += 1
 
     def move(self, steps):
         try:
