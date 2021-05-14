@@ -6,6 +6,10 @@ import math
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 """
 mode_pins = (14, 15, 18)    # Microstep Resolution MS1-MS3 -> GPIO Pin
 step_pin = 21                # Step -> GPIO Pin
@@ -39,9 +43,10 @@ class A4988_Nema(object):
 
         self.enable(False)
 
-        self.stepCount = 0
+        self.step_count = 0
+        self.step_delay = 0.1
 
-        print("StepperDriver initialized")
+        logger.info("StepperDriver initialized")
 
     def clearPins(self):
         GPIO.output(self.step_pin, GPIO.LOW)
@@ -49,118 +54,99 @@ class A4988_Nema(object):
         GPIO.output(self.enable_pin, GPIO.HIGH)
         GPIO.output(self.mode_pins, (GPIO.LOW, )*len(self.mode_pins))
 
-    def enable(self, enable):
-        GPIO.output(self.enable_pin, not enable)
-
     def step(self):
         GPIO.output(self.step_pin, GPIO.HIGH)
         #time.sleep(self.step_delay)
         GPIO.output(self.step_pin, GPIO.LOW)
         #time.sleep(self.step_delay)
-        self.stepCount += 1
-    
-    def deg2Steps(self, degree):
-        return math.floor(degree / self.deg_per_step)
+        self.step_count += 1
+
+    def move(self, steps):
+        try:
+            self.enable(True)
+            for _ in range(0, steps):
+                self.step()
+                time.sleep(self.step_delay)
+                logger.debug("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.stepsToDegree(self.stepCount)))
+        except KeyboardInterrupt:
+            logger.info("User Keyboard Interrupt : StepperDriverLib:")
+        except Exception as motor_error:
+            logger.error(sys.exc_info()[0])
+            logger.error(motor_error)
+            logger.error("StepperDriverLib  : Unexpected error:")
+        else:
+            logger.debug("\nStepperDriverLib, Motor Run finished, Details:.\n")
+            logger.debug("Motor type = {}".format(self.motor_type))
+            #logger.debug("Clockwise = {}".format(clockwise))
+            #logger.debug("Step Type = {}".format(step_type))
+            logger.debug("Number of steps = {}".format(steps))
+            logger.debug("Step Delay = {}".format(self.step_delay))
+            logger.debug("Size of turn in degrees = {}".format(self.stepsToDegree(steps)))
+        finally:
+            self.clearPins()
+            self.enable(False)
+
+    def rotate(self, degree=90.0):
+        """ rotate, moves stepper motor based on 6 inputs
+        Number of degree sequence's to execute.
         """
-        step_type
-        microsteps =  {'Full': 1,
+        numberOfSteps = self.degreeToSteps(degree)
+        logger.info("step_delay: {}, # of steps: {}".format(self.step_delay, numberOfSteps))
+        self.move(numberOfSteps)
+
+    def degreeToSteps(self, degree):
+        return math.floor((degree / 1.8) * self.microstep)
+
+    def stepsToDegree(self, steps):
+        return float(steps * self.deg_per_step)
+
+    def enable(self, enable):
+        GPIO.output(self.enable_pin, not enable)
+
+    def setMicrostep(self, microstep="Full"):
+        """ 
+        Type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
+        """
+        microsteps =  { 'Full': 1,
                         'Half': 2,
                         '1/4': 4,
                         '1/8': 8,
                         '1/16': 16,
-                        '1/32': 32}
-        return int(round((deg / 1.8) * microsteps[step_type]))
-        """
+                        '1/32': 32 }
+        self.microstep = microsteps[microstep]
 
-    def steps2Deg(self, steps):
-        return float(steps * self.deg_per_step)
-
-    def set_resolution(self, step_type):
-        """ method to calculate step resolution
-        based on motor type and steptype"""
         if self.motor_type == "A4988":
-            resolution = {'Full': (0, 0, 0),
-                          'Half': (1, 0, 0),
-                          '1/4': (0, 1, 0),
-                          '1/8': (1, 1, 0),
-                          '1/16': (1, 1, 1)}
+            resolution = { 'Full': (0, 0, 0),
+                           'Half': (1, 0, 0),
+                           '1/4': (0, 1, 0),
+                           '1/8': (1, 1, 0),
+                           '1/16': (1, 1, 1) }
         elif self.motor_type == "DRV8825":
-            resolution = {'Full': (0, 0, 0),
-                          'Half': (1, 0, 0),
-                          '1/4': (0, 1, 0),
-                          '1/8': (1, 1, 0),
-                          '1/16': (0, 0, 1),
-                          '1/32': (1, 0, 1)}
+            resolution = { 'Full': (0, 0, 0),
+                           'Half': (1, 0, 0),
+                           '1/4': (0, 1, 0),
+                           '1/8': (1, 1, 0),
+                           '1/16': (0, 0, 1),
+                           '1/32': (1, 0, 1) }
         else: 
-            print("Error invalid motor_type: {}".format(self.motor_type))
-            quit()
+            logger.error("Error invalid motor_type: {}".format(self.motor_type))
+
+        GPIO.output(self.mode_pins, resolution[microstep])
         
-        # error check stepmode
-        if step_type in resolution:
-            pass
-        else:
-            print("Error invalid steptype: {}".format(step_type))
-            quit()
-
-        self.steps_per_rev = 1600 #self.deg2Steps(360)
+        self.steps_per_rev = self.degreeToSteps(360.0)
         self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
-        GPIO.output(self.mode_pins, resolution[step_type])
-        #resolution / (60 * rpm)
- 
-    def rotate(self, degree=90.0, clockwise=False, rpm=3, step_type="1/8", verbose=False, init_delay=.05):
-        """ rotate, moves stepper motor based on 6 inputs
-         (1) degree, type=float, default=90.0, help=Number of degree sequence's to execute. Default is one revolution , 200 in Full mode.
-         (2) clockwise, type=bool default=False, help="Turn stepper counterclockwise"
-         (3) rpm, type=int, default=6, help=Speed in rpm (in seconds) between steps.
-         (4) step_type, type=string, default=Full, help=Type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
-         (5) verbose, type=bool, default=False, help="Write pin actions",
-         (6) initdelay, type=float, default=1mS, help=Intial delay after GPIO pins initialized but before motor is moved.
+
+    def setRPM(self, rpm=3):
         """
+        Speed in rpm (in seconds) between steps.
+        """
+        self.rpm = rpm
+        # Calculate time between steps in seconds
+        self.step_delay = 60.0 / (self.steps_per_rev * self.rpm)
 
-        try:
-            # dict resolution
-            self.set_resolution(step_type)
 
-            time.sleep(init_delay)
-
-            # Calculate time between steps in seconds
-            step_delay = 60.0 / (self.steps_per_rev * rpm)
-
-            # Convert degrees to steps
-            numberOfSteps = self.deg2Steps(degree)
-
-            print("step_delay: {}, # of steps: {}".format(step_delay, numberOfSteps))
-
-            GPIO.output(self.direction_pin, clockwise)
-            self.enable(True)
-
-            for _ in range(0, numberOfSteps):
-                self.step()
-                time.sleep(step_delay)
-                if verbose:
-                    print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
-
-        except KeyboardInterrupt:
-            print("User Keyboard Interrupt : StepperDriverLib:")
-        except Exception as motor_error:
-            print(sys.exc_info()[0])
-            print(motor_error)
-            print("StepperDriverLib  : Unexpected error:")
-        else:
-            # print report status
-            if verbose:
-                print("\nStepperDriverLib, Motor Run finished, Details:.\n")
-                print("Motor type = {}".format(self.motor_type))
-                print("Clockwise = {}".format(clockwise))
-                print("Step Type = {}".format(step_type))
-                print("Number of steps = {}".format(numberOfSteps))
-                print("Step Delay = {}".format(step_delay))
-                print("Intial delay = {}".format(init_delay))
-                print("Size of turn in degrees = {}"
-                      .format(degree_calc(steps, steptype)))
-        finally:
-            self.clearPins()
-            self.enable(False)
+    def setDirection(self, clockwise):
+        GPIO.output(self.direction_pin, clockwise)
 
 
 """
@@ -202,71 +188,76 @@ class ULN2003A_BYJ(object):
         self.setPins(self.Seq[self.stepCount % len(self.Seq)])
         self.stepCount += 1
 
-    def deg2Steps(self, degree):
-        #return int(round(deg/self.stepSize))
-        return math.floor(degree / self.deg_per_step)
-
-    def steps2Deg(self, steps):
-        return float(steps * self.deg_per_step)
-
-    def set_resolution(self, step_type):
-        self.steps_per_rev = 4096    # steps per revolution
-        self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
-
-    def rotate(self, degree=90.0, clockwise=False, rpm=3, step_type="Half", verbose=False, init_delay=.05):
-        """ rotate, moves stepper motor based on 6 inputs
-         (1) clockwise, type=bool default=False help="Turn stepper counterclockwise"
-         (2) steptype, type=string , default=Full help= type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
-         (3) steps, type=int, default=200, help=Number of steps sequence's to execute. Default is one revolution , 200 in Full mode.
-         (4) stepdelay, type=float, default=0.05, help=Time to wait (in seconds) between steps.
-         (5) verbose, type=bool  type=bool default=False help="Write pin actions",
-         (6) initdelay, type=float, default=1mS, help= Intial delay after GPIO pins initialized but before motor is moved.
-        """
-        
+    def move(self, steps):
         try:
-            self.set_resolution(step_type)
-
-            time.sleep(init_delay)
-
-            # Calculate time between steps in seconds
-            step_delay = 60.0 / (self.steps_per_rev * rpm)
-            
-            # Convert degrees to steps
-            numberOfSteps = self.deg2Steps(degree)
-
-            print("step_delay: {}, # of steps: {}".format(step_delay, numberOfSteps))
-
-            if not clockwise:
-                self.pins.reverse()
-
-            for _ in range(0, numberOfSteps):
+            for _ in range(0, steps):
                 self.step()
-                time.sleep(step_delay)
-                if verbose:
-                    print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
-            
-            print("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.steps2Deg(self.stepCount)))
-            
-            if not clockwise:
-                self.pins.reverse()
-
+                time.sleep(self.step_delay)
+                logger.debug("stepCount: {}, stepsToDeg: {:.2f}".format(self.stepCount, self.stepsToDegree(self.stepCount)))
         except KeyboardInterrupt:
-            print("User Keyboard Interrupt : StepperDriverLib:")
+            logger.info("User Keyboard Interrupt : StepperDriverLib:")
         except Exception as motor_error:
-            print(sys.exc_info()[0])
-            print(motor_error)
-            print("StepperDriverLib  : Unexpected error:")
+            logger.error(sys.exc_info()[0])
+            logger.error(motor_error)
+            logger.error("StepperDriverLib  : Unexpected error:")
         else:
-            # print report status
-            if verbose:
-                print("\nStepperDriverLib, Motor Run finished, Details:.\n")
-                print("Motor type = {}".format(self.motor_type))
-                print("Clockwise = {}".format(clockwise))
-                print("Step Type = {}".format(step_type))
-                print("Number of steps = {}".format(numberOfSteps))
-                print("Step Delay = {}".format(step_delay))
-                print("Intial delay = {}".format(init_delay))
-                print("Size of turn in degrees = {}"
-                      .format(degree_calc(steps, steptype)))
+            logger.debug("\nStepperDriverLib, Motor Run finished, Details:.\n")
+            logger.debug("Motor type = {}".format(self.motor_type))
+            #logger.debug("Clockwise = {}".format(clockwise))
+            #logger.debug("Step Type = {}".format(step_type))
+            logger.debug("Number of steps = {}".format(steps))
+            logger.debug("Step Delay = {}".format(self.step_delay))
+            logger.debug("Size of turn in degrees = {}".format(self.stepsToDegree(steps)))
         finally:
             self.clearPins()
+
+    def rotate(self, degree=90.0):
+        """ 
+        rotate, moves stepper motor based on 6 inputs
+        """
+        numberOfSteps = self.degreeToSteps(degree)
+        logger.info("step_delay: {}, # of steps: {}".format(self.step_delay, numberOfSteps))
+
+        if not self.clockwise:
+            self.pins.reverse()
+
+        self.move(numberOfSteps)
+
+        if not self.clockwise:
+            self.pins.reverse()
+
+    def degreeToSteps(self, degree):
+        return math.floor((degree / 1.8) * self.microstep)
+
+    def stepsToDegree(self, steps):
+        return float(steps * self.deg_per_step)
+
+    def enable(self, enable):
+        pass
+
+    def setMicrostep(self, microstep="Full"):
+        """ rotate
+        Type of drive to step motor 5 options (Full, Half, 1/4, 1/8, 1/16)
+        """
+        microsteps =  { 'Full': 1,
+                        'Half': 2,
+                        '1/4': 4,
+                        '1/8': 8,
+                        '1/16': 16,
+                        '1/32': 32 }
+        self.microstep = microsteps[microstep]
+
+        self.steps_per_rev = self.degreeToSteps(360.0)
+        self.deg_per_step = 360.0 / self.steps_per_rev      # degree per step
+
+    def setRPM(self, rpm=3):
+        """
+        Speed in rpm (in seconds) between steps.
+        """
+        self.rpm = rpm
+        # Calculate time between steps in seconds
+        self.step_delay = 60.0 / (self.steps_per_rev * self.rpm)
+
+    def setDirection(self, clockwise):
+        self.clockwise =  clockwise
+    
