@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  sensor_msgs
   std_srvs
   message_generation
 )
@@ -56,7 +57,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES demo
-  CATKIN_DEPENDS roscpp rospy std_msgs std_srvs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs std_srvs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -68,6 +69,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+# /usr/local/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -84,7 +86,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(encoder_exec src/Encoder.cpp src/AS5600.cpp src/AS5600.h)
+add_executable(encoder_node src/Encoder.cpp src/AS5600.cpp src/AS5600.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -96,10 +98,18 @@ add_executable(encoder_exec src/Encoder.cpp src/AS5600.cpp src/AS5600.h)
 ## same as for the library above
 # add_dependencies(AS5600_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+# target_compile_options(encoder_node 
+#   PRIVATE 
+#   -march=armv7-a 
+#   -std=c++11 
+#   -O3 
+#   -Wno-psabi
+# )
+
 ## Specify libraries to link a library or executable target against
-target_link_libraries(encoder_exec
+target_link_libraries(encoder_node
   ${catkin_LIBRARIES}
-  -lwiringPi
+  wiringPi
 )
 
 #############
@@ -116,6 +126,7 @@ install(PROGRAMS
   scripts/missionController.py
   scripts/remoteInterface.py
   scripts/webApp.py
+  scripts/joystick.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
