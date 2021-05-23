@@ -45,9 +45,9 @@ public:
     int burnAngle();
     int burnSettings();
 
-    static const int RESOLUTION_BIT = 12;
-    static const int TOTAL_STEP_COUNT = 2 << RESOLUTION_BIT;
-    static const double STEP_ANGLE = 360.0 / TOTAL_STEP_COUNT;
+    static constexpr int RESOLUTION_BIT = 12;
+    static constexpr int TOTAL_STEP_COUNT = 2 << RESOLUTION_BIT;
+    static constexpr double STEP_ANGLE = 360.0 / TOTAL_STEP_COUNT;
     
 private:
   

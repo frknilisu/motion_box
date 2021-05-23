@@ -36,11 +36,12 @@ double convertRawAngleToDegrees(int rawAngle)
 
 void joyCallback(const std_msgs::String::ConstPtr& joy)
 {
+    std::string data = joy->data.c_str();
+    ROS_INFO("joyCallback: [%s]", data);
     /*
     int x = (int)joy->axes[0];
     int y = (int)joy->axes[1];
     bool pressed = (bool)joy->buttons[0];
-    ROS_INFO("joyCallback: [%d, %d, %d]", x, y, pressed);
     curr_joy_stat.x = x;
     curr_joy_stat.y = y;
     curr_joy_stat.pressed = pressed;

@@ -27,7 +27,7 @@ class MCP3008:
  
     def read(self):
         # Function for reading the MCP3008 channel between 0 and 7
-        def readChannel(self, channel):
+        def readChannel(channel):
             val = self.spi.xfer2([1, (8 + channel) << 4, 0])
             data = ((val[1] & 3) << 8) + val[2]
             return data
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         # output
         rospy.loginfo("VRx: {}  VRy: {}  SW: {}".format(curr_x, curr_y, curr_sw))
 
-        if abs(curr_x - prev_x) > 5 or abs(curr_y - prev_y) > 5 or abs(curr_sw - prev_sw) > 5:
+        if abs(curr_x - prev_x) > 10 or abs(curr_y - prev_y) > 10 or abs(curr_sw - prev_sw) > 25:
             data = json.dumps({
                 'x': curr_x, 
                 'y': curr_y, 
