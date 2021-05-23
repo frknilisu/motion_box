@@ -6,7 +6,6 @@ import signal
 import sys
 
 from std_msgs.msg import String
-from std_srvs.srv import Trigger, TriggerRequest
 from motion_box.srv import StringTrigger, StringTriggerRequest
 
 from threading import Thread
