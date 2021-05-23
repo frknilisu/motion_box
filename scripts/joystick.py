@@ -3,9 +3,10 @@
 import rospy
 import sys
 import time
+import json
 
-from std_msgs.msg import Int64, Bool
-from sensor_msgs.msg import Joy
+from std_msgs.msg import Int64, Bool, String
+#from sensor_msgs.msg import Joy
 
 import spidev
 import os
@@ -45,7 +46,7 @@ def map_val(x, in_min, in_max, out_min, out_max):
 
 if __name__ == "__main__":
     rospy.init_node('joystick', log_level=rospy.DEBUG)
-    pub_joy = rospy.Publisher("joystick_status", Joy, queue_size=10)
+    pub_joy = rospy.Publisher("joystick_status", String, queue_size=10)
 
     joystick = MCP3008()
 
@@ -69,9 +70,13 @@ if __name__ == "__main__":
         rospy.loginfo("VRx: {}  VRy: {}  SW: {}".format(curr_x, curr_y, curr_sw))
 
         if abs(curr_x - prev_x) > 5 or abs(curr_y - prev_y) > 5 or abs(curr_sw - prev_sw) > 5:
-            joy_msg = Joy()
-            joy_msg.axes = (curr_x, curr_y, )
-            joy_msg.buttons = (curr_sw, )
+            data = json.dumps({
+                'x': curr_x, 
+                'y': curr_y, 
+                'pressed': curr_sw
+            })
+            joy_msg = String()
+            joy_msg.data = data
 
             pub_joy.publish(joy_msg)
 

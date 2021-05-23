@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string>
-#include <sensor_msgs/Joy.h>
 #include <std_msgs/String.h>
 #include "motion_box/StringTrigger.h"
 #include "motion_box/StringTriggerRequest.h"
@@ -35,8 +34,9 @@ double convertRawAngleToDegrees(int rawAngle)
     return rawAngle * AS5600::STEP_ANGLE;
 }
 
-void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
+void joyCallback(const std_msgs::String::ConstPtr& joy)
 {
+    /*
     int x = (int)joy->axes[0];
     int y = (int)joy->axes[1];
     bool pressed = (bool)joy->buttons[0];
@@ -55,6 +55,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         }
     }
     prev_joy_stat = curr_joy_stat;
+    */
 }
 
 int main(int argc, char* argv[]) {
