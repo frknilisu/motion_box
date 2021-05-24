@@ -1,9 +1,11 @@
 #include <ros/ros.h>
 #include <iostream>
+#include <vector>
 #include <unistd.h>
 #include <stdint.h>
 #include <string>
 #include <std_msgs/String.h>
+#include <std_msgs/Int32MultiArray.h>
 #include "motion_box/StringTrigger.h"
 #include "motion_box/StringTriggerRequest.h"
 
@@ -34,14 +36,13 @@ double convertRawAngleToDegrees(int rawAngle)
     return rawAngle * AS5600::STEP_ANGLE;
 }
 
-void joyCallback(const std_msgs::String::ConstPtr& joy)
+void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& joy)
 {
-    std::string data = joy->data.c_str();
-    ROS_INFO("joyCallback: [%s]", data);
-    /*
-    int x = (int)joy->axes[0];
-    int y = (int)joy->axes[1];
-    bool pressed = (bool)joy->buttons[0];
+    std::vector<int> data = joy->data;
+    ROS_INFO("joyCallback: [%d, %d, %d]", data[0], data[1], data[2]);
+    int x = (int)data[0];
+    int y = (int)data[1];
+    bool pressed = (bool)data[2];
     curr_joy_stat.x = x;
     curr_joy_stat.y = y;
     curr_joy_stat.pressed = pressed;
@@ -56,13 +57,11 @@ void joyCallback(const std_msgs::String::ConstPtr& joy)
         }
     }
     prev_joy_stat = curr_joy_stat;
-    */
 }
 
 int main(int argc, char* argv[]) {
     ros::init(argc, argv, "encoder_node");
     ros::NodeHandle nh;
-    ROS_INFO("Hello, World!");
 
     encoder.setup();
     
@@ -71,10 +70,14 @@ int main(int argc, char* argv[]) {
 
     ros::Subscriber sub = nh.subscribe("joystick_status", 10, joyCallback);
 
-    while(!(isStartPositionSet && isEndPositionSet));
+    while(ros::ok()) {
+        if(!(isStartPositionSet && isEndPositionSet))
+            continue;
+        
+        ROS_INFO("Start Position: %d", startPosition);
+        ROS_INFO("End Position: %d", endPosition);
+    }
     
-    ROS_INFO("Start Position: %d", startPosition);
-    ROS_INFO("End Position: %d", endPosition);
 
     /*
 

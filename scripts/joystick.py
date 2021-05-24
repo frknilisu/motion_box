@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
 import rospy
-import sys
 import time
-import json
 
-from std_msgs.msg import Int64, Bool, String
-#from sensor_msgs.msg import Joy
+from std_msgs.msg import Int32MultiArray
 
 import spidev
-import os
+
+axis_thresholds = (0, 500, 523, 1023)
+speed_range = (5, 50)
+button_threshold = 10
 
 class MCP3008:
 
@@ -43,67 +43,60 @@ class MCP3008:
 def map_val(x, in_min, in_max, out_min, out_max):
     return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
+def checkJoyStatDiff(curr, prev):
+    n = len(curr)
+    for i in range(n):
+        if abs(curr[i] - prev[i]) > 20:
+            return True
+
+    return False
 
 if __name__ == "__main__":
     rospy.init_node('joystick', log_level=rospy.DEBUG)
-    pub_joy = rospy.Publisher("joystick_status", String, queue_size=10)
+    pub_joy = rospy.Publisher("joystick_status", Int32MultiArray, queue_size=10)
 
     joystick = MCP3008()
 
-    #Time delay, which tells how many seconds the value is read out
     delay = 0.5
 
-    prev_x = 0
-    prev_y = 0
-    prev_sw = 0
-
-    curr_x = 0
-    curr_y = 0
-    curr_sw = 0
+    prev_joy_stat = [0, 0, 0]
+    curr_joy_stat = [0, 0, 0]
 
     while True:
 
         # Determine position
-        curr_x, curr_y, curr_sw = joystick.read()
+        curr_joy_stat = list(joystick.read())
 
         # output
-        rospy.loginfo("VRx: {}  VRy: {}  SW: {}".format(curr_x, curr_y, curr_sw))
+        rospy.loginfo("VRx: {}  VRy: {}  SW: {}".format(*curr_joy_stat))
 
-        if abs(curr_x - prev_x) > 10 or abs(curr_y - prev_y) > 10 or abs(curr_sw - prev_sw) > 25:
-            data = json.dumps({
-                'x': curr_x, 
-                'y': curr_y, 
-                'pressed': curr_sw
-            })
-            joy_msg = String()
-            joy_msg.data = data
-
+        if checkJoyStatDiff(curr_joy_stat, prev_joy_stat):
+            joy_msg = Int32MultiArray()
+            joy_msg.data = curr_joy_stat
             pub_joy.publish(joy_msg)
 
 
-        if curr_x > 523:
+        if curr_joy_stat[0] > 523:
             # map the speed between 5 and 500 rpm
-            vx = map_val(curr_x, 523, 1023, 5, 500)
-        elif curr_x <= 500:
-            vx = -map_val(curr_x, 0, 500, 5, 500)
+            vx = map_val(curr_joy_stat[0], 523, 1023, 5, 50)
+        elif curr_joy_stat[0] <= 500:
+            vx = -map_val(curr_joy_stat[0], 500, 0, -5, -50)
         else:
             vx = 0.0
 
-        if curr_y > 523:
+        if curr_joy_stat[1] > 523:
             # map the speed between 5 and 500 rpm
-            vy = map_val(curr_y, 523, 1023, 5, 500)
-        elif curr_y <= 500:
-            vy = -map_val(curr_y, 0, 500, 5, 500)
+            vy = map_val(curr_joy_stat[1], 523, 1023, 5, 50)
+        elif curr_joy_stat[1] <= 500:
+            vy = -map_val(curr_joy_stat[1], 500, 0, -5, -50)
         else:
             vy = 0.0
         
-        sw_pressed = (curr_sw < 10)
+        sw_pressed = (curr_joy_stat[2] < 10)
 
         rospy.logdebug("vx: {}  vy: {}  sw: {}".format(vx, vy, sw_pressed))
 
-        prev_x = curr_x
-        prev_y = curr_y
-        prev_sw = curr_sw
+        prev_joy_stat = curr_joy_stat
 
         # wait
         time.sleep(delay)
