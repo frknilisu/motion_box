@@ -17,7 +17,7 @@ app = Flask(__name__, template_folder='../templates')
 
 @app.route("/")
 def index():
-    return render_template("angular_control.html")
+    return render_template("index.html")
 
 @app.route("/timelapse", methods=["POST"])
 def timelapse():
@@ -44,11 +44,6 @@ def timelapse():
     pub.publish(json.dumps(d))
 
     return redirect('/')
-
-@app.route("/test", methods=["POST"])
-def test():
-    d = request.form.to_dict()
-    print(d)
 
 def signal_handler(signal, frame):
     rospy.signal_shutdown("end")
