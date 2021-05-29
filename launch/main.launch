@@ -1,9 +1,11 @@
 <launch>
-    <node name="motorController" pkg="motion_box" type="motorController.py" output="screen" />
+    <arg name="motor_type" default="1" />
+    <node name="motorController" pkg="motion_box" type="motorController.py" args="$(arg motor_type)" output="screen" />
     <node name="encoder_node" pkg="motion_box" type="encoder_node" output="screen" />
     <node name="missionController" pkg="motion_box" type="missionController.py" output="screen" />
     <node name="dslrInterface" pkg="motion_box" type="dslrInterface.py" output="screen" />
     <!-- <node name="remoteInterface" pkg="motion_box" type="remoteInterface.py" output="screen" /> -->
     <node name="webApp" pkg="motion_box" type="webApp.py" output="screen" />
+    <remap from="joystick/cmd_vel" to="motor/drive/manual" />
     <node name="joystick" pkg="motion_box" type="joystick.py" output="screen" />
 </launch>

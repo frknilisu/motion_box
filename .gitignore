@@ -183,3 +183,7 @@ dmypy.json
 
 .DS_Store
 
+
+Dockerfile
+.vscode
+.devcontainer
